@@ -23,6 +23,8 @@ namespace ForkAndSpoon.Application
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IFavoriteService, FavoriteService>();
 
+            // External API
+            services.AddHttpClient<ITriviaService, TriviaService>();
             return services;
         }
     }
