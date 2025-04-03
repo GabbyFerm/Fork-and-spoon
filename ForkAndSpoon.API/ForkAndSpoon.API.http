@@ -1,0 +1,6 @@
+@ForkAndSpoon.API_HostAddress = http://localhost:5210
+
+GET {{ForkAndSpoon.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
