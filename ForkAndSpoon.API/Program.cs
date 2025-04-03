@@ -2,6 +2,7 @@ using ForkAndSpoon.Application;
 using ForkAndSpoon.Infrastructure;
 using ForkAndSpoon.Infrastructure.Helpers;
 using ForkAndSpoon.Infrastructure.Extensions;
+using ForkAndSpoon.Infrastructure.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,14 @@ builder.Services.AddAuthorization();
 // Build and run
 var app = builder.Build();
 
+// Seeder
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ForkAndSpoonDbContext>();
+    var seeder = new DbSeeder(dbContext);
+    await seeder.SeedAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -36,4 +45,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.Run();
+await app.RunAsync();
