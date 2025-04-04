@@ -18,33 +18,50 @@ namespace ForkAndSpoon.Application.Services
             _autoMapper = autoMapper;
         }
 
-        public async Task AddFavoriteAsync(int userId, int recipeId)
+        public async Task<bool> AddFavoriteAsync(int userId, int recipeId)
         {
-            var favoritesExist = await _context.Favorites.AnyAsync(favorite => favorite.UserID == userId && favorite.RecipeID == recipeId);
+            // Check if the recipe exists and is not soft-deleted
+            var recipeExists = await _context.Recipes.AnyAsync(recipe => recipe.RecipeID == recipeId && !recipe.IsDeleted);
 
-            if (favoritesExist) return;
+            if (!recipeExists)
+            {
+               throw new ArgumentException("Recipe does not exist or has been deleted.");
+            }
 
-            var favorite = new Favorite 
-            { 
+            // Check if favorite already exists
+            var alreadyFavorited = await _context.Favorites.AnyAsync(f => f.UserID == userId && f.RecipeID == recipeId);
+
+            if (alreadyFavorited)
+                return false;
+
+            var favorite = new Favorite
+            {
                 UserID = userId,
-                RecipeID = recipeId 
+                RecipeID = recipeId
             };
 
             _context.Favorites.Add(favorite);
             await _context.SaveChangesAsync();
+
+            return true;
         }
 
         public async Task<List<RecipeReadDto>> GetUserFavoritesAsync(int userId)
         {
             var favoriteRecipes = await _context.Favorites
-                .Where(favorite => favorite.UserID == userId)
+                .Where(favorite => favorite.UserID == userId && !favorite.Recipe.IsDeleted)
+                .Include(favorite => favorite.Recipe)
+                    .ThenInclude(recipe => recipe.Category)
+                .Include(favorite => favorite.Recipe)
+                    .ThenInclude(recipe => recipe.RecipeIngredients)
+                        .ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
+                .Include(favorite => favorite.Recipe)
+                    .ThenInclude(recipe => recipe.RecipeDietaryPreferences)
+                        .ThenInclude(recipeDietaryPreference => recipeDietaryPreference.DietaryPreference)
                 .Select(favorite => favorite.Recipe)
-                .Include(recipe => recipe.Category)
-                .Include(recipe => recipe.RecipeIngredients)
-                    .ThenInclude(ingredient => ingredient.Ingredient)
-                .Include(recipe => recipe.RecipeDietaryPreferences)
-                    .ThenInclude(dp => dp.DietaryPreference)
                 .ToListAsync();
+
+            return _autoMapper.Map<List<RecipeReadDto>>(favoriteRecipes);
 
             return _autoMapper.Map<List<RecipeReadDto>>(favoriteRecipes);
         }
