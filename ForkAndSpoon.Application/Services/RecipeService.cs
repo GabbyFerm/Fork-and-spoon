@@ -5,7 +5,6 @@ using ForkAndSpoon.Application.Interfaces;
 using ForkAndSpoon.Domain.Models;
 using ForkAndSpoon.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using System.Formats.Asn1;
 
 namespace ForkAndSpoon.Application.Services
 {
@@ -23,6 +22,7 @@ namespace ForkAndSpoon.Application.Services
         public async Task<List<RecipeReadDto>> GetAllRecipesAsync(string? categoryFilter = null, string? ingredientFilter = null, string? dietaryPreferenceFilter = null, string? sortOrder = null, int page = 1, int pageSize = 10)
         {
             var query = _context.Recipes
+                .Where(recipe => !recipe.IsDeleted)
                 .Include(recipe => recipe.Category)
                 .Include(recipe => recipe.RecipeIngredients)
                     .ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
@@ -78,16 +78,16 @@ namespace ForkAndSpoon.Application.Services
         {
             var matchingRecipe = await _context.Recipes
                 .Include(recipe => recipe.Category)
-                .FirstOrDefaultAsync(recipe => recipe.RecipeID == recipeId);
+                .Include(recipe => recipe.RecipeIngredients)
+                    .ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
+                .Include(recipe => recipe.RecipeDietaryPreferences)
+                    .ThenInclude(recipeDietaryPreference => recipeDietaryPreference.DietaryPreference)
+                .FirstOrDefaultAsync(recipe => recipe.RecipeID == recipeId && !recipe.IsDeleted); 
 
             if (matchingRecipe == null)
-            {
                 return null;
-            }
-            else
-            {
-                return _autoMapper.Map<RecipeReadDto>(matchingRecipe);
-            }
+
+            return _autoMapper.Map<RecipeReadDto>(matchingRecipe);
         }
 
         public async Task<RecipeReadDto> CreateRecipeAsync(RecipeCreateDto recipeCreateDto, int userId)
@@ -235,12 +235,50 @@ namespace ForkAndSpoon.Application.Services
         {
             var recipeToDelete = await _context.Recipes.FindAsync(id);
 
-            if (recipeToDelete == null) return false;
+            if (recipeToDelete == null || recipeToDelete.IsDeleted) return false;
 
-            _context.Recipes.Remove(recipeToDelete);
+            recipeToDelete.IsDeleted = true;
 
             await _context.SaveChangesAsync();
 
+            return true;
+        }
+
+        public async Task<List<RecipeReadDto>> GetDeletedRecipesAsync()
+        {
+            var deletedRecipes = await _context.Recipes
+                .Where(recipe => recipe.IsDeleted)
+                .Select(recipe => new Recipe
+                {
+                    RecipeID = recipe.RecipeID,
+                    Title = recipe.Title,
+                    CreatedBy = recipe.CreatedBy,
+                    Steps = recipe.Steps 
+                }).ToListAsync();
+
+            return _autoMapper.Map<List<RecipeReadDto>>(deletedRecipes);
+        }
+        public async Task<RecipeReadDto?> GetDeletedRecipeByIdAsync(int recipeId)
+        {
+            var recipe = await _context.Recipes
+                .Where(recipe => recipe.IsDeleted && recipe.RecipeID == recipeId)
+                .Include(recipe => recipe.Category)
+                .Include(recipe => recipe.RecipeIngredients).ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
+                .Include(recipe => recipe.RecipeDietaryPreferences).ThenInclude(recipeDietaryPref => recipeDietaryPref.DietaryPreference)
+                .FirstOrDefaultAsync();
+
+            if (recipe == null) return null;
+
+            return _autoMapper.Map<RecipeReadDto>(recipe);
+        }
+        public async Task<bool> RestoreDeletedRecipeAsync(int recipeId)
+        {
+            var recipe = await _context.Recipes.FirstOrDefaultAsync(recipe => recipe.RecipeID == recipeId && recipe.IsDeleted);
+
+            if (recipe == null) return false;
+
+            recipe.IsDeleted = false;
+            await _context.SaveChangesAsync();
             return true;
         }
     }
