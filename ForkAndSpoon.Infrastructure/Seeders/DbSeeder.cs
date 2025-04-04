@@ -1,4 +1,5 @@
-﻿using Bogus;
+﻿using BCrypt.Net;
+using Bogus;
 using ForkAndSpoon.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -88,4 +89,5 @@ namespace ForkAndSpoon.Infrastructure.Seeders
             }
         }
     }
+
 }
