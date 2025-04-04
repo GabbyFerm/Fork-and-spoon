@@ -136,13 +136,13 @@ namespace ForkAndSpoon.Application.Services
             return _autoMapper.Map<RecipeReadDto>(recipeWithRelations);
         }
 
-        public async Task<RecipeReadDto?> UpdateRecipeAsync(int recipeId, RecipeUpdateDto updatedRecipe, int userId)
+        public async Task<RecipeReadDto?> UpdateRecipeAsync(int recipeId, RecipeUpdateDto updatedRecipe, int userId, string role)
         {
             var recipeInDb = await _context.Recipes
                 .Include(recipe => recipe.RecipeIngredients)
                     .ThenInclude(recipeIngredient => recipeIngredient.Ingredient)
                 .Include(recipe => recipe.RecipeDietaryPreferences)
-                .FirstOrDefaultAsync(recipe => recipe.RecipeID == recipeId && recipe.CreatedBy == userId);
+                .FirstOrDefaultAsync(recipe => recipe.RecipeID == recipeId && (recipe.CreatedBy == userId || role == "Admin"));
 
             if (recipeInDb == null)
             {
@@ -231,11 +231,15 @@ namespace ForkAndSpoon.Application.Services
             return _autoMapper.Map<RecipeReadDto>(updatedRecipe);
         }
 
-        public async Task<bool> DeleteRecipeAsync(int id)
+        public async Task<bool> DeleteRecipeAsync(int recipeId, int userId, string role)
         {
-            var recipeToDelete = await _context.Recipes.FindAsync(id);
+            var recipeToDelete = await _context.Recipes.FirstOrDefaultAsync(recipe => recipe.RecipeID == recipeId);
 
             if (recipeToDelete == null || recipeToDelete.IsDeleted) return false;
+
+            // Only allow if user is creator or admin
+            if (recipeToDelete.CreatedBy != userId && role != "Admin")
+                return false;
 
             recipeToDelete.IsDeleted = true;
 

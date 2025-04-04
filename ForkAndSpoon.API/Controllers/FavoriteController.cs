@@ -39,8 +39,18 @@ namespace ForkAndSpoon.API.Controllers
 
             int userId = int.Parse(userIdClaim.Value);
 
-            await _favoriteService.AddFavoriteAsync(userId, recipeId);
-            return Ok("Recipe added to favorites.");
+            try
+            {
+                var added = await _favoriteService.AddFavoriteAsync(userId, recipeId);
+                if (!added)
+                    return BadRequest("This recipe is already in your favorites.");
+
+                return Ok("Recipe added to favorites.");
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpDelete("remove-favorite/{recipeId}")]

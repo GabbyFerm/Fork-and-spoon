@@ -6,6 +6,7 @@ obj/
 
 # VS Code
 .vscode/
+.vs/
 
 # EF Migrations cache
 Migrations/

@@ -58,16 +58,20 @@ public class RecipeController : ControllerBase
     public async Task<IActionResult> UpdateRecipe(int id, [FromBody] RecipeUpdateDto updatedRecipe)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null) 
-            return Unauthorized("Unable to identify the user from the authentication token.");
+        var roleClaim = User.FindFirst(ClaimTypes.Role);
+
+        if (userIdClaim == null || roleClaim == null)
+            return Unauthorized("Unable to extract user ID or role from token.");
 
         int userId = int.Parse(userIdClaim.Value);
-        var recipe = await _recipeService.UpdateRecipeAsync(id, updatedRecipe, userId);
+        string role = roleClaim.Value;
 
-        if (recipe == null) 
-            return NotFound("Recipe not found or not owned by user.");
-        else
-            return Ok(recipe);
+        var recipe = await _recipeService.UpdateRecipeAsync(id, updatedRecipe, userId, role);
+
+        if (recipe == null)
+            return NotFound("Recipe not found, deleted, or not editable by this user.");
+
+        return Ok(recipe);
     }
 
     [Authorize]
@@ -95,12 +99,19 @@ public class RecipeController : ControllerBase
     [HttpDelete("delete-recipe/{id}")]
     public async Task<IActionResult> DeleteRecipe(int id)
     {
-        var isDeleted = await _recipeService.DeleteRecipeAsync(id);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        if (userIdClaim == null) return Unauthorized("User ID claim is missing.");
+
+        int userId = int.Parse(userIdClaim.Value);
+
+        var isDeleted = await _recipeService.DeleteRecipeAsync(id, userId, role!);
 
         if (!isDeleted)
-            return NotFound("Recipe not found or could not be deleted.");
+            return NotFound("Recipe not found or not owned by user.");
 
-        return NoContent(); 
+        return NoContent();
     }
 
     [Authorize(Roles = "Admin")]
