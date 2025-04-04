@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ForkAndSpoon.Application.DTOs.Recipe;
+﻿using ForkAndSpoon.Application.DTOs.Recipe;
 using ForkAndSpoon.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using ForkAndSpoon.Domain.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -94,13 +94,46 @@ public class RecipeController : ControllerBase
 
     [Authorize]
     [HttpDelete("delete-recipe/{id}")]
-    public async Task<IActionResult> DeleteRecipe(int id) 
-    { 
+    public async Task<IActionResult> DeleteRecipe(int id)
+    {
         var isDeleted = await _recipeService.DeleteRecipeAsync(id);
 
-        if (!isDeleted) 
+        if (!isDeleted)
             return NotFound("Recipe not found or could not be deleted.");
 
-        return NoContent();
+        return NoContent(); 
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("admin/deleted-recipes")]
+    public async Task<IActionResult> GetDeletedRecipes()
+    {
+        var deletedRecipes = await _recipeService.GetDeletedRecipesAsync();
+
+        return Ok(deletedRecipes);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpGet("admin/deleted-recipes/{id}")]
+    public async Task<IActionResult> GetDeletedRecipe(int id)
+    {
+        var recipe = await _recipeService.GetDeletedRecipeByIdAsync(id);
+
+        if (recipe == null) 
+            return NotFound("Deleted recipe not found.");
+
+        return Ok(recipe);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("admin/restore-recipe/{id}")]
+    public async Task<IActionResult> RestoreDeletedRecipe(int id)
+    {
+        var restored = await _recipeService.RestoreDeletedRecipeAsync(id);
+
+        if (!restored) 
+            return NotFound("Recipe not found or not deleted.");
+
+        return Ok("Recipe successfully restored.");
     }
 }

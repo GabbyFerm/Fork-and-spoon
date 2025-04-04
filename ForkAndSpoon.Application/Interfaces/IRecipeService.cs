@@ -10,5 +10,8 @@ namespace ForkAndSpoon.Application.Interfaces
         Task<RecipeReadDto?> UpdateRecipeAsync(int recipeId, RecipeUpdateDto updatedRecipe, int userId);
         Task<RecipeReadDto?> UpdateDietaryPreferencesAsync(int recipeId, int userId, RecipeDietaryPreferenceUpdateDto updateDto);
         Task<bool> DeleteRecipeAsync(int id);
+        Task<List<RecipeReadDto>> GetDeletedRecipesAsync();
+        Task<RecipeReadDto?> GetDeletedRecipeByIdAsync(int recipeId);
+        Task<bool> RestoreDeletedRecipeAsync(int recipeId);
     }
 }

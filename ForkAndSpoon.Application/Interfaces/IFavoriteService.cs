@@ -1,10 +1,4 @@
-﻿using ForkAndSpoon.Application.DTOs.Favorite;
-using ForkAndSpoon.Application.DTOs.Recipe;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ForkAndSpoon.Application.DTOs.Recipe;
 
 namespace ForkAndSpoon.Application.Interfaces
 {
