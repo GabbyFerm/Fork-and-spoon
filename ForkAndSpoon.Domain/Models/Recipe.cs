@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ForkAndSpoon.Domain.Models
+﻿namespace ForkAndSpoon.Domain.Models
 {
     public class Recipe
     {
@@ -13,6 +7,8 @@ namespace ForkAndSpoon.Domain.Models
         public required string Steps { get; set; }
         public int CategoryID { get; set; }
         public string? ImageUrl { get; set; } // Image is not required
+
+        public bool IsDeleted { get; set; }
 
         // Foreign key for user (creator)
         public int CreatedBy { get; set; }

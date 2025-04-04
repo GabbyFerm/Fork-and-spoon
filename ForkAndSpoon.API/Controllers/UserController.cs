@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ForkAndSpoon.Application.DTOs.Auth;
-using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace ForkAndSpoon.API.Controllers
