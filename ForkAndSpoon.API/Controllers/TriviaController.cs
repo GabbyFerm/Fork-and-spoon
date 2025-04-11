@@ -1,4 +1,4 @@
-﻿using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.Application.ExternalApi;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ForkAndSpoon.API.Controllers

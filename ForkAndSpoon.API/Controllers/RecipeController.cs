@@ -1,5 +1,16 @@
-﻿using ForkAndSpoon.Application.DTOs.Recipe;
+﻿using ForkAndSpoon.API.Helpers;
 using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Application.Recipes.Commands.CreateRecipe;
+using ForkAndSpoon.Application.Recipes.Commands.DeleteRecipe;
+using ForkAndSpoon.Application.Recipes.Commands.RestoreDeletedRecipe;
+using ForkAndSpoon.Application.Recipes.Commands.UpdateDietaryPreferences;
+using ForkAndSpoon.Application.Recipes.Commands.UpdateRecipe;
+using ForkAndSpoon.Application.Recipes.DTOs;
+using ForkAndSpoon.Application.Recipes.Queries.GetAllRecipes;
+using ForkAndSpoon.Application.Recipes.Queries.GetDeletedRecipeById;
+using ForkAndSpoon.Application.Recipes.Queries.GetDeletedRecipes;
+using ForkAndSpoon.Application.Recipes.Queries.GetRecipeById;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -8,17 +19,24 @@ using System.Security.Claims;
 [Route("api/[controller]")]
 public class RecipeController : ControllerBase
 {
-    private readonly IRecipeService _recipeService;
+    private readonly IMediator _mediator;
 
-    public RecipeController(IRecipeService recipeService)
+    public RecipeController(IMediator mediator)
     {
-        _recipeService = recipeService;
+        _mediator = mediator;
     }
 
     [HttpGet("get-recipes")]
-    public async Task<ActionResult<List<RecipeReadDto>>> GetAllRecipes([FromQuery] string? category, [FromQuery] string? ingredient, [FromQuery] string? dietary, [FromQuery] string? sortOrder, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<ActionResult<List<RecipeReadDto>>> GetAllRecipes(
+    [FromQuery] string? category,
+    [FromQuery] string? ingredient,
+    [FromQuery] string? dietary,
+    [FromQuery] string? sortOrder,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
     {
-        var recipes = await _recipeService.GetAllRecipesAsync(category, ingredient, dietary, sortOrder, page, pageSize);
+        var query = new GetAllRecipesQuery(category, ingredient, dietary, sortOrder, page, pageSize);
+        var recipes = await _mediator.Send(query);
 
         if (recipes == null || recipes.Count == 0)
             return NotFound("No recipes found with the given filters.");
@@ -29,9 +47,9 @@ public class RecipeController : ControllerBase
     [HttpGet("get-recipe/{id}")]
     public async Task<ActionResult<RecipeReadDto>> GetRecipeById(int id)
     {
-        var recipe = await _recipeService.GetRecipeByIdAsync(id);
+        var recipe = await _mediator.Send(new GetRecipeByIdQuery(id));
 
-        if (recipe == null) 
+        if (recipe == null)
             return NotFound("Recipe not found.");
 
         return Ok(recipe);
@@ -41,14 +59,11 @@ public class RecipeController : ControllerBase
     [HttpPost("create-recipe")]
     public async Task<ActionResult<RecipeReadDto>> CreateRecipe([FromBody] RecipeCreateDto recipeToCreate)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
-        if (userIdClaim == null) 
-            return Unauthorized("Unable to identify the user from the authentication token.");
+        var command = new CreateRecipeCommand(recipeToCreate, userId);
 
-        int userId = int.Parse(userIdClaim.Value);
-
-        var createdRecipe = await _recipeService.CreateRecipeAsync(recipeToCreate, userId);
+        var createdRecipe = await _mediator.Send(command);
 
         return CreatedAtAction(nameof(GetRecipeById), new { id = createdRecipe.RecipeID }, createdRecipe);
     }
@@ -57,16 +72,11 @@ public class RecipeController : ControllerBase
     [HttpPut("update-recipe/{id}")]
     public async Task<IActionResult> UpdateRecipe(int id, [FromBody] RecipeUpdateDto updatedRecipe)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        var roleClaim = User.FindFirst(ClaimTypes.Role);
+        var userId = ClaimsHelper.GetUserIdFromClaims(User);
+        var role = ClaimsHelper.GetUserRoleFromClaims(User);
 
-        if (userIdClaim == null || roleClaim == null)
-            return Unauthorized("Unable to extract user ID or role from token.");
-
-        int userId = int.Parse(userIdClaim.Value);
-        string role = roleClaim.Value;
-
-        var recipe = await _recipeService.UpdateRecipeAsync(id, updatedRecipe, userId, role);
+        var command = new UpdateRecipeCommand(id, updatedRecipe, userId, role);
+        var recipe = await _mediator.Send(command);
 
         if (recipe == null)
             return NotFound("Recipe not found, deleted, or not editable by this user.");
@@ -78,35 +88,31 @@ public class RecipeController : ControllerBase
     [HttpPatch("update-dietary-preferences/{id}")]
     public async Task<IActionResult> PatchDietaryPreferences(int id, [FromBody] RecipeDietaryPreferenceUpdateDto updateDto)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null) 
-            return Unauthorized("Unable to identify the user from the authentication token.");
+        var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
         if (updateDto.DietaryPreferences == null || !updateDto.DietaryPreferences.Any())
             return BadRequest("Dietary preferences cannot be empty.");
 
-        int userId = int.Parse(userIdClaim.Value);
+        var command = new UpdateDietaryPreferencesCommand(id, userId, updateDto);
 
-        var updatedRecipe = await _recipeService.UpdateDietaryPreferencesAsync(id, userId, updateDto);
+        var updatedRecipe = await _mediator.Send(command);
 
         if (updatedRecipe == null)
             return NotFound("Recipe not found or not owned by user.");
-        else
-            return Ok(updatedRecipe);
+
+        return Ok(updatedRecipe);
     }
 
     [Authorize]
     [HttpDelete("delete-recipe/{id}")]
     public async Task<IActionResult> DeleteRecipe(int id)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        var userId = ClaimsHelper.GetUserIdFromClaims(User);
+        var role = ClaimsHelper.GetUserRoleFromClaims(User);
 
-        if (userIdClaim == null) return Unauthorized("User ID claim is missing.");
+        var command = new DeleteRecipeCommand(id, userId, role);
 
-        int userId = int.Parse(userIdClaim.Value);
-
-        var isDeleted = await _recipeService.DeleteRecipeAsync(id, userId, role!);
+        var isDeleted = await _mediator.Send(command);
 
         if (!isDeleted)
             return NotFound("Recipe not found or not owned by user.");
@@ -118,7 +124,7 @@ public class RecipeController : ControllerBase
     [HttpGet("admin/deleted-recipes")]
     public async Task<IActionResult> GetDeletedRecipes()
     {
-        var deletedRecipes = await _recipeService.GetDeletedRecipesAsync();
+        var deletedRecipes = await _mediator.Send(new GetDeletedRecipesQuery());
 
         return Ok(deletedRecipes);
     }
@@ -127,7 +133,7 @@ public class RecipeController : ControllerBase
     [HttpGet("admin/deleted-recipes/{id}")]
     public async Task<IActionResult> GetDeletedRecipe(int id)
     {
-        var recipe = await _recipeService.GetDeletedRecipeByIdAsync(id);
+        var recipe = await _mediator.Send(new GetDeletedRecipeByIdQuery(id));
 
         if (recipe == null) 
             return NotFound("Deleted recipe not found.");
@@ -139,9 +145,9 @@ public class RecipeController : ControllerBase
     [HttpPatch("admin/restore-recipe/{id}")]
     public async Task<IActionResult> RestoreDeletedRecipe(int id)
     {
-        var restored = await _recipeService.RestoreDeletedRecipeAsync(id);
+        var result = await _mediator.Send(new RestoreDeletedRecipeCommand(id));
 
-        if (!restored) 
+        if (!result) 
             return NotFound("Recipe not found or not deleted.");
 
         return Ok("Recipe successfully restored.");

@@ -37,6 +37,7 @@ namespace ForkAndSpoon.Infrastructure.Extensions
                         new List<string>()
                     }
                 });
+
             });
 
             return services;

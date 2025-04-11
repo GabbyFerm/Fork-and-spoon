@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ForkAndSpoon.Application.DTOs.Auth;
-using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.Application.Identity.Auth;
+using ForkAndSpoon.Application.Identity.Commands;
+using ForkAndSpoon.Application.Identity.DTOs;
+using ForkAndSpoon.Application.Identity.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ForkAndSpoon.API.Controllers
 {
@@ -9,18 +12,20 @@ namespace ForkAndSpoon.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IMediator _mediator;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IMediator mediator)
         {
-            _authService = authService;
+            _mediator = mediator;
         }
 
         [AllowAnonymous]
         [HttpPost("register")]
-        public async Task<IActionResult> Register(UserRegisterDto registerDto)
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto registerDto)
         {
-            var token = await _authService.RegisterAsync(registerDto);
+            var command = new RegisterCommand(registerDto.UserName, registerDto.Email, registerDto.Password);
+            var token = await _mediator.Send(command);
+
             return Ok(token);
         }
 
@@ -28,8 +33,24 @@ namespace ForkAndSpoon.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLoginDto loginDto)
         {
-            var token = await _authService.LoginAsync(loginDto);
+            var query = new LoginQuery(loginDto.Email, loginDto.Password);
+            var token = await _mediator.Send(query);
+
             return Ok(token);
+        }
+
+        [AllowAnonymous]
+        [HttpPatch("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetDto)
+        {
+            var command = new ResetPasswordCommand(resetDto.Email, resetDto.NewPassword);
+
+            var result = await _mediator.Send(command);
+
+            if (!result)
+                return NotFound("user with that email was not found.");
+
+            return NoContent(); // 204 response if success and nothing to return
         }
     }
 }

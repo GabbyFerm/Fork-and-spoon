@@ -1,7 +1,10 @@
-﻿using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.API.Helpers;
+using ForkAndSpoon.Application.Favorites.Commands.AddToFavorites;
+using ForkAndSpoon.Application.Favorites.Commands.RemoveFromFavorites;
+using ForkAndSpoon.Application.Favorites.Queries.GetUserFavorites;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace ForkAndSpoon.API.Controllers
 {
@@ -10,38 +13,31 @@ namespace ForkAndSpoon.API.Controllers
     [Authorize]
     public class FavoriteController : ControllerBase
     {
-        private readonly IFavoriteService _favoriteService;
+        private readonly IMediator _mediator;
 
-        public FavoriteController(IFavoriteService favoriteService)
+        public FavoriteController(IMediator mediator)
         {
-            _favoriteService = favoriteService;
+            _mediator = mediator;
         }
 
         [HttpGet("my-favorites")]
         public async Task<IActionResult> GetUserFavorites()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized("User token is missing.");
+            var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
-            int userId = int.Parse(userIdClaim.Value);
-
-            var favorites = await _favoriteService.GetUserFavoritesAsync(userId);
+            var favorites = await _mediator.Send(new GetUserFavoritesQuery(userId));
             return Ok(favorites);
         }
 
         [HttpPost("add-favorite/{recipeId}")]
         public async Task<IActionResult> AddToFavorites(int recipeId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized("User token is missing.");
-
-            int userId = int.Parse(userIdClaim.Value);
+            var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
             try
             {
-                var added = await _favoriteService.AddFavoriteAsync(userId, recipeId);
+                var added = await _mediator.Send(new AddToFavoritesQuery(userId, recipeId));
+
                 if (!added)
                     return BadRequest("This recipe is already in your favorites.");
 
@@ -56,14 +52,12 @@ namespace ForkAndSpoon.API.Controllers
         [HttpDelete("remove-favorite/{recipeId}")]
         public async Task<IActionResult> RemoveFromFavorites(int recipeId)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized("User token is missing.");
+            var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
-            int userId = int.Parse(userIdClaim.Value);
+            var command = new RemoveFromFavoritesCommand(userId, recipeId);
+            var success = await _mediator.Send(command);
 
-            var wasRemoved = await _favoriteService.RemoveFavoriteAsync(userId, recipeId);
-            if (!wasRemoved)
+            if (!success)
                 return NotFound("Favorite not found.");
 
             return Ok("Recipe removed from favorites.");
