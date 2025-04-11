@@ -1,4 +1,4 @@
-﻿using ForkAndSpoon.Application.DTOs.Recipe;
+﻿using ForkAndSpoon.Application.Recipes.DTOs;
 using ForkAndSpoon.Domain.Models;
 
 namespace ForkAndSpoon.Application.Factories

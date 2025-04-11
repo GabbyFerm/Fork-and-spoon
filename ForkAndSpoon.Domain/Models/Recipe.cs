@@ -5,7 +5,7 @@
         public int RecipeID { get; set; }
         public required string Title { get; set; }
         public required string Steps { get; set; }
-        public int CategoryID { get; set; }
+        public int? CategoryID { get; set; }
         public string? ImageUrl { get; set; } // Image is not required
 
         public bool IsDeleted { get; set; }

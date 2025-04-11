@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using ForkAndSpoon.Application.DTOs.Category;
+using ForkAndSpoon.Application.Categorys.DTOs;
 using ForkAndSpoon.Domain.Models;
 
 namespace ForkAndSpoon.Application.Mappings

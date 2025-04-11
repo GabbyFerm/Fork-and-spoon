@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using ForkAndSpoon.Application.DTOs.Recipe;
+using ForkAndSpoon.Application.Recipes.DTOs;
 
 namespace ForkAndSpoon.Application.Validators
 {

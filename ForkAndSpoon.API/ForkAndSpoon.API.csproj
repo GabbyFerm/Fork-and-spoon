@@ -19,6 +19,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ForkAndSpoon.Application\ForkAndSpoon.Application.csproj" />
+	  <ProjectReference Include="..\ForkAndSpoon.Application\ForkAndSpoon.Application.csproj" />
+	  <ProjectReference Include="..\ForkAndSpoon.Infrastructure\ForkAndSpoon.Infrastructure.csproj" />
+	  <ProjectReference Include="..\ForkAndSpoon.Domain\ForkAndSpoon.Domain.csproj" />
   </ItemGroup>
 
 </Project>

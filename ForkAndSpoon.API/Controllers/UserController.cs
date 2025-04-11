@@ -1,4 +1,12 @@
-﻿using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.API.Helpers;
+using ForkAndSpoon.Application.Users.Commands.DeleteUser;
+using ForkAndSpoon.Application.Users.Commands.UpdateEmail;
+using ForkAndSpoon.Application.Users.Commands.UpdatePassword;
+using ForkAndSpoon.Application.Users.DTOs;
+using ForkAndSpoon.Application.Users.Queries.GetAllUsers;
+using ForkAndSpoon.Application.Users.Queries.GetLoggedInUser;
+using ForkAndSpoon.Application.Users.Queries.GetUserById;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -9,26 +17,27 @@ namespace ForkAndSpoon.API.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUserService _userService;
+        private readonly IMediator _mediator;
 
-        public UserController(IUserService userService)
+        public UserController(IMediator mediator)
         {
-            _userService = userService;
+            _mediator = mediator;
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("get-all-users")]
+        [HttpGet("get-all")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _userService.GetAllUsersAsync();
+            var users = await _mediator.Send(new GetAllUsersQuery());
+
             return Ok(users);
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("get-user/{id}")]
+        [HttpGet("get/{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
-            var user = await _userService.GetUserByIdAsync(id);
+            var user = await _mediator.Send(new GetUserByIdQuery(id));
 
             if (user == null)
                 return NotFound("User not found.");
@@ -42,23 +51,50 @@ namespace ForkAndSpoon.API.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
-                return Unauthorized("User token is missing.");
+                return Unauthorized("Unable to identify the user from token.");
 
             int userId = int.Parse(userIdClaim.Value);
-            var user = await _userService.GetUserByIdAsync(userId);
+            var user = await _mediator.Send(new GetLoggedInUserQuery(userId));
 
-            return user == null ? NotFound("User not found.") : Ok(user);
+            return Ok(user);
         }
 
-        [HttpDelete("delete-user/{id}")]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var isDeleted = await _userService.DeleteUserAsync(id);
+            var callerId = ClaimsHelper.GetUserIdFromClaims(User);
+            string callerRole = ClaimsHelper.GetUserRoleFromClaims(User);
 
-            if (!isDeleted)
-                return NotFound("User not found or could not be deleted.");
+            var result = await _mediator.Send(new DeleteUserCommand(id, callerId, callerRole));
+
+            if (!result)
+                return Forbid(); // User not allowed to delete someone else
 
             return NoContent();
+        }
+
+        [Authorize]
+        [HttpPatch("update-email")]
+        public async Task<IActionResult> UpdateEmail([FromBody] UpdateEmailDto updateDto)
+        {
+            var userId = ClaimsHelper.GetUserIdFromClaims(User);
+
+            var command = new UpdateEmailCommand(userId, updateDto.Email);
+            var result = await _mediator.Send(command);
+
+            return result ? NoContent() : BadRequest("Email already in use or update failed.");
+        }
+
+        [Authorize]
+        [HttpPatch("update-password")]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDto updateDto)
+        {
+            var userId = ClaimsHelper.GetUserIdFromClaims(User);
+
+            var command = new UpdatePasswordCommand(userId, updateDto.CurrentPassword, updateDto.NewPassword);
+            var result = await _mediator.Send(command);
+
+            return result ? NoContent() : BadRequest("Current password is incorrect or update failed.");
         }
     }
 }

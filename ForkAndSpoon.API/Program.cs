@@ -1,8 +1,9 @@
 using ForkAndSpoon.Application;
 using ForkAndSpoon.Infrastructure;
-using ForkAndSpoon.Infrastructure.Helpers;
+using ForkAndSpoon.Infrastructure.Database;
+using ForkAndSpoon.Infrastructure.Database.Seeders;
 using ForkAndSpoon.Infrastructure.Extensions;
-using ForkAndSpoon.Infrastructure.Seeders;
+using ForkAndSpoon.Infrastructure.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 

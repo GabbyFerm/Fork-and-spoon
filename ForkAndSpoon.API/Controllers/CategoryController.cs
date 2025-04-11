@@ -1,6 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ForkAndSpoon.Application.DTOs.Category;
-using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.API.Helpers;
+using ForkAndSpoon.Application.Categorys.Commands.CreateCategory;
+using ForkAndSpoon.Application.Categorys.Commands.DeleteCategory;
+using ForkAndSpoon.Application.Categorys.Commands.UpdateCategory;
+using ForkAndSpoon.Application.Categorys.DTOs;
+using ForkAndSpoon.Application.Categorys.Queries.GetAllCategories;
+using ForkAndSpoon.Application.Categorys.Queries.GetCategoryById;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ForkAndSpoon.API.Controllers
 {
@@ -8,55 +15,75 @@ namespace ForkAndSpoon.API.Controllers
     [Route("api/[controller]")]
     public class CategoryController : ControllerBase
     {
-        private readonly ICategoryService _categoryService;
+        private readonly IMediator _mediator;
 
-        public CategoryController(ICategoryService categoryService)
+        public CategoryController(IMediator mediator)
         {
-            _categoryService = categoryService;
+            _mediator = mediator;
         }
 
-        [HttpGet("list-all-categories")]
-        public async Task<ActionResult<List<CategoryDto>>> GetAllCategories()
+        [HttpGet("list-all")]
+        public async Task<IActionResult> GetAllCategories()
         {
-            var categories = await _categoryService.GetAllCategoriesAsync();
+            var categories = await _mediator.Send(new GetAllCategoriesQuery());
+
             return Ok(categories);
         }
 
-        [HttpGet("get-category/{id}")]
+        [HttpGet("get/{id}")]
         public async Task<IActionResult> GetCategoryById(int id)
         {
-            var category = await _categoryService.GetCategoryByIdAsync(id);
+            var category = await _mediator.Send(new GetCategoryByIdQuery(id));
+
             if (category == null) 
                 return NotFound("Category not found.");
+
             return Ok(category);
         }
 
-        [HttpPost("create-category")]
-        public async Task<IActionResult> CreateCategory([FromBody] CategoryCreateDto categoryToCreate)
+        [Authorize]
+        [HttpPost("create")]
+        public async Task<ActionResult<CategoryDto>> CreateCategory([FromBody] CategoryCreateDto categoryCreateDto)
         {
-            var createdCategory = await _categoryService.CreateCategoryAsync(categoryToCreate);
+            var command = new CreateCategoryCommand(categoryCreateDto.Name);
+            var createdCategory = await _mediator.Send(command);
 
-            // Returns status code 201 created and location header
-            return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.CategoryID }, createdCategory); 
+            return CreatedAtAction(nameof(GetCategoryById), new { id = createdCategory.CategoryID }, createdCategory);
         }
 
-        [HttpPut("update-category/{id}")]
-        public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryUpdateDto categoryToUpdate)
+        [Authorize]
+        [HttpPut("update/{id}")]
+        public async Task<ActionResult<CategoryDto>> UpdateCategory(int id, [FromBody] CategoryUpdateDto updateDto)
         {
-            var updatedCategory = await _categoryService.UpdateCategoryAsync(id, categoryToUpdate);
+            var role = ClaimsHelper.GetUserRoleFromClaims(User);
 
-            if (updatedCategory == null) 
-                return NotFound("Category not found.");
+            var command = new UpdateCategoryCommand(id, updateDto.Name, role);
 
-            return Ok(updatedCategory);
+            try
+            {
+                var updatedCategory = await _mediator.Send(command);
+                return Ok(updatedCategory);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid("Only admins can update this category."); 
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
-        [HttpDelete("delete-category/{id}")]
+        [Authorize]
+        [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var isDeleted = await _categoryService.DeleteCategoryAsync(id);
+            var role = ClaimsHelper.GetUserRoleFromClaims(User);
 
-            if (!isDeleted) 
+            var command = new DeleteCategoryCommand(id, role);
+            var success = await _mediator.Send(command);
+
+            if (!success)
                 return NotFound("Category not found or could not be deleted.");
 
             return NoContent();
