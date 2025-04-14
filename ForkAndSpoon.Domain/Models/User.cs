@@ -11,7 +11,7 @@
 
         // Navigation properties
         public ICollection<Recipe> CreatedRecipes { get; set; } = new List<Recipe>();
-        public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+        public ICollection<FavoriteRecipe> FavoriteRecipes { get; set; } = new List<FavoriteRecipe>();
         public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     }
 }

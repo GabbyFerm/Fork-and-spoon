@@ -14,7 +14,7 @@ namespace ForkAndSpoon.Infrastructure.Database
         public DbSet<DietaryPreference> DietaryPreferences { get; set; }
         public DbSet<RecipeDietaryPreference> RecipeDietaryPreferences { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<Favorite> Favorites { get; set; }
+        public DbSet<FavoriteRecipe> FavoriteRecipes { get; set; }
         public DbSet<Rating> Ratings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -36,18 +36,19 @@ namespace ForkAndSpoon.Infrastructure.Database
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Many-to-Many: Favorite (Users <-> Recipes)
-            modelBuilder.Entity<Favorite>()
+            modelBuilder.Entity<FavoriteRecipe>()
+                .ToTable("FavoriteRecipes")
                 .HasKey(favorite => new { favorite.UserID, favorite.RecipeID });
 
-            modelBuilder.Entity<Favorite>()
+            modelBuilder.Entity<FavoriteRecipe>()
                 .HasOne(favorite => favorite.User)
-                .WithMany(user => user.Favorites)
+                .WithMany(user => user.FavoriteRecipes)
                 .HasForeignKey(favorite => favorite.UserID)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Favorite>()
+            modelBuilder.Entity<FavoriteRecipe>()
                 .HasOne(favorite => favorite.Recipe)
-                .WithMany(recipe => recipe.Favorites)
+                .WithMany(recipe => recipe.FavoriteRecipes)
                 .HasForeignKey(favorite => favorite.RecipeID)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -56,6 +57,12 @@ namespace ForkAndSpoon.Infrastructure.Database
                 .HasOne(recipe => recipe.Category)
                 .WithMany(category => category.Recipes)
                 .HasForeignKey(recipe => recipe.CategoryID)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Recipe>()
+                .HasOne(recipe => recipe.CreatedByUser)
+                .WithMany(user => user.CreatedRecipes)
+                .HasForeignKey(recipe => recipe.CreatedBy)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Many-to-Many: Ratings (Users <-> Recipes)

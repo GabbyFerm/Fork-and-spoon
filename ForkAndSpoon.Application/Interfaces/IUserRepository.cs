@@ -9,5 +9,6 @@ namespace ForkAndSpoon.Application.Interfaces
         Task<bool> DeleteUserAsync(int userId);
         Task<bool> UpdateEmailAsync(int userId, string newEmail);
         Task<bool> UpdatePasswordAsync(int userId, string currentPassword, string newPassword);
+        Task<bool> UpdateUserNameAsync(int userId, string newUserName);
     }
 }

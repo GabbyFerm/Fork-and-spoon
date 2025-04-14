@@ -29,18 +29,18 @@ namespace ForkAndSpoon.Application.Services
             }
 
             // Check if favorite already exists
-            var alreadyFavorited = await _context.Favorites.AnyAsync(f => f.UserID == userId && f.RecipeID == recipeId);
+            var alreadyFavorited = await _context.FavoriteRecipes.AnyAsync(f => f.UserID == userId && f.RecipeID == recipeId);
 
             if (alreadyFavorited)
                 return false;
 
-            var favorite = new Favorite
+            var favorite = new FavoriteRecipe
             {
                 UserID = userId,
                 RecipeID = recipeId
             };
 
-            _context.Favorites.Add(favorite);
+            _context.FavoriteRecipes.Add(favorite);
             await _context.SaveChangesAsync();
 
             return true;
@@ -48,7 +48,7 @@ namespace ForkAndSpoon.Application.Services
 
         public async Task<List<RecipeReadDto>> GetUserFavoritesAsync(int userId)
         {
-            var favoriteRecipes = await _context.Favorites
+            var favoriteRecipes = await _context.FavoriteRecipes
                 .Where(favorite => favorite.UserID == userId && !favorite.Recipe.IsDeleted)
                 .Include(favorite => favorite.Recipe)
                     .ThenInclude(recipe => recipe.Category)
@@ -66,11 +66,11 @@ namespace ForkAndSpoon.Application.Services
 
         public async Task<bool> RemoveFavoriteAsync(int userId, int recipeId)
         {
-            var favorite = await _context.Favorites.FirstOrDefaultAsync(favorite => favorite.UserID == userId && favorite.RecipeID == recipeId);
+            var favorite = await _context.FavoriteRecipes.FirstOrDefaultAsync(favorite => favorite.UserID == userId && favorite.RecipeID == recipeId);
 
             if (favorite == null) return false;
 
-            _context.Favorites.Remove(favorite);
+            _context.FavoriteRecipes.Remove(favorite);
 
             await _context.SaveChangesAsync();
 

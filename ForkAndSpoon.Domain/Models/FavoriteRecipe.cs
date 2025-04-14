@@ -1,6 +1,6 @@
 ﻿namespace ForkAndSpoon.Domain.Models
 {
-    public class Favorite
+    public class FavoriteRecipe
     {
         public int UserID { get; set; }
         public User User { get; set; } = null!;
