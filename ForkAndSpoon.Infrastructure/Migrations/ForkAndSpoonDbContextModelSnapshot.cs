@@ -63,7 +63,7 @@ namespace ForkAndSpoon.Infrastructure.Migrations
                     b.ToTable("DietaryPreferences");
                 });
 
-            modelBuilder.Entity("ForkAndSpoon.Domain.Models.Favorite", b =>
+            modelBuilder.Entity("ForkAndSpoon.Domain.Models.FavoriteRecipe", b =>
                 {
                     b.Property<int>("UserID")
                         .HasColumnType("int");
@@ -75,7 +75,7 @@ namespace ForkAndSpoon.Infrastructure.Migrations
 
                     b.HasIndex("RecipeID");
 
-                    b.ToTable("Favorites");
+                    b.ToTable("FavoriteRecipes", (string)null);
                 });
 
             modelBuilder.Entity("ForkAndSpoon.Domain.Models.Ingredient", b =>
@@ -132,10 +132,7 @@ namespace ForkAndSpoon.Infrastructure.Migrations
                     b.Property<int?>("CategoryID")
                         .HasColumnType("int");
 
-                    b.Property<int>("CreatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CreatedByUserUserID")
+                    b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
                     b.Property<string>("ImageUrl")
@@ -156,7 +153,7 @@ namespace ForkAndSpoon.Infrastructure.Migrations
 
                     b.HasIndex("CategoryID");
 
-                    b.HasIndex("CreatedByUserUserID");
+                    b.HasIndex("CreatedBy");
 
                     b.ToTable("Recipes");
                 });
@@ -220,16 +217,16 @@ namespace ForkAndSpoon.Infrastructure.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("ForkAndSpoon.Domain.Models.Favorite", b =>
+            modelBuilder.Entity("ForkAndSpoon.Domain.Models.FavoriteRecipe", b =>
                 {
                     b.HasOne("ForkAndSpoon.Domain.Models.Recipe", "Recipe")
-                        .WithMany("Favorites")
+                        .WithMany("FavoriteRecipes")
                         .HasForeignKey("RecipeID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ForkAndSpoon.Domain.Models.User", "User")
-                        .WithMany("Favorites")
+                        .WithMany("FavoriteRecipes")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -265,7 +262,8 @@ namespace ForkAndSpoon.Infrastructure.Migrations
 
                     b.HasOne("ForkAndSpoon.Domain.Models.User", "CreatedByUser")
                         .WithMany("CreatedRecipes")
-                        .HasForeignKey("CreatedByUserUserID");
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Category");
 
@@ -327,7 +325,7 @@ namespace ForkAndSpoon.Infrastructure.Migrations
 
             modelBuilder.Entity("ForkAndSpoon.Domain.Models.Recipe", b =>
                 {
-                    b.Navigation("Favorites");
+                    b.Navigation("FavoriteRecipes");
 
                     b.Navigation("Ratings");
 
@@ -340,7 +338,7 @@ namespace ForkAndSpoon.Infrastructure.Migrations
                 {
                     b.Navigation("CreatedRecipes");
 
-                    b.Navigation("Favorites");
+                    b.Navigation("FavoriteRecipes");
 
                     b.Navigation("Ratings");
                 });

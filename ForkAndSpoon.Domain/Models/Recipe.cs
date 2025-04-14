@@ -11,7 +11,7 @@
         public bool IsDeleted { get; set; }
 
         // Foreign key for user (creator)
-        public int CreatedBy { get; set; }
+        public int? CreatedBy { get; set; }
         public User? CreatedByUser { get; set; }
 
         // Navigation properties
@@ -19,7 +19,7 @@
 
         public ICollection<RecipeIngredient> RecipeIngredients { get; set; } = new List<RecipeIngredient>();
         public ICollection<RecipeDietaryPreference> RecipeDietaryPreferences { get; set; } = new List<RecipeDietaryPreference>();
-        public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
+        public ICollection<FavoriteRecipe> FavoriteRecipes { get; set; } = new List<FavoriteRecipe>();
         public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     }
 }

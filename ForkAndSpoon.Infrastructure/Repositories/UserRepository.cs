@@ -31,11 +31,30 @@ namespace ForkAndSpoon.Infrastructure.Repositories
 
         public async Task<bool> DeleteUserAsync(int userId)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return false;
+            var user = await _context.Users
+                .Include(user => user.FavoriteRecipes)
+                .Include(user => user.Ratings)
+                .FirstOrDefaultAsync(u => u.UserID == userId);
 
+            if (user == null) 
+                return false;
+
+            // Remove related favorites
+            if (user.FavoriteRecipes.Any())
+            {
+                _context.FavoriteRecipes.RemoveRange(user.FavoriteRecipes);
+            }
+
+            // Remove related ratings
+            if (user.Ratings.Any())
+            {
+                _context.Ratings.RemoveRange(user.Ratings);
+            }
+
+            // EF will set CreatedBy = null in Recipes due to ON DELETE SET NULL
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
+
             return true;
         }
 
@@ -66,6 +85,22 @@ namespace ForkAndSpoon.Infrastructure.Repositories
 
             // Hash the new password and update
             user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> UpdateUserNameAsync(int userId, string newUserName)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            // Check if the new username already exists in the database
+            var userNameExists = await _context.Users.AnyAsync(user => user.UserName.ToLower() == newUserName.ToLower() && user.UserID != userId);
+            if (userNameExists) throw new InvalidOperationException("Username is already registered.");
+
+            // Update the user's username
+            user.UserName = newUserName;
             await _context.SaveChangesAsync();
 
             return true;

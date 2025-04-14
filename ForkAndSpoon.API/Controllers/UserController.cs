@@ -2,6 +2,7 @@
 using ForkAndSpoon.Application.Users.Commands.DeleteUser;
 using ForkAndSpoon.Application.Users.Commands.UpdateEmail;
 using ForkAndSpoon.Application.Users.Commands.UpdatePassword;
+using ForkAndSpoon.Application.Users.Commands.UpdateUserName;
 using ForkAndSpoon.Application.Users.DTOs;
 using ForkAndSpoon.Application.Users.Queries.GetAllUsers;
 using ForkAndSpoon.Application.Users.Queries.GetLoggedInUser;
@@ -95,6 +96,18 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(command);
 
             return result ? NoContent() : BadRequest("Current password is incorrect or update failed.");
+        }
+
+        [Authorize]
+        [HttpPatch("update-username")]
+        public async Task<IActionResult> UpdateUserName([FromBody] UpdateUserNameDto updateDto)
+        {
+            var userId = ClaimsHelper.GetUserIdFromClaims(User);
+
+            var command = new UpdateUserNameCommand(userId, updateDto.UserName);
+            var result = await _mediator.Send(command);
+
+            return result ? NoContent() : BadRequest("Username already in use or update failed.");
         }
     }
 }

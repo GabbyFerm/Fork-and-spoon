@@ -11,11 +11,11 @@ namespace ForkAndSpoon.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class FavoriteController : ControllerBase
+    public class FavoriteRecipeController : ControllerBase
     {
         private readonly IMediator _mediator;
 
-        public FavoriteController(IMediator mediator)
+        public FavoriteRecipeController(IMediator mediator)
         {
             _mediator = mediator;
         }
