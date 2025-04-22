@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Users.Commands.DeleteUser
 {
-    public class DeleteUserCommand : IRequest<bool>
+    public class DeleteUserCommand : IRequest<OperationResult<bool>>
     {
         public int TargetUserId { get; }
         public int CallerUserId { get; }

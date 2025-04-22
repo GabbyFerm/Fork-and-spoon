@@ -1,14 +1,13 @@
-﻿using ForkAndSpoon.Application.Users.DTOs;
+﻿using ForkAndSpoon.Application.Interfaces.Generic;
+using ForkAndSpoon.Domain.Models;
 
 namespace ForkAndSpoon.Application.Interfaces
 {
-    public interface IUserRepository
+    public interface IUserRepository : IReadRepository<User>
     {
-        Task<List<UserDto>> GetAllUsersAsync();
-        Task<UserDto?> GetUserByIdAsync(int userId);
-        Task<bool> DeleteUserAsync(int userId);
-        Task<bool> UpdateEmailAsync(int userId, string newEmail);
-        Task<bool> UpdatePasswordAsync(int userId, string currentPassword, string newPassword);
-        Task<bool> UpdateUserNameAsync(int userId, string newUserName);
+        Task<OperationResult<bool>> UpdateEmailAsync(int userId, string newEmail);
+        Task<OperationResult<bool>> UpdatePasswordAsync(int userId, string currentPassword, string newPassword);
+        Task<OperationResult<bool>> UpdateUserNameAsync(int userId, string newUserName);
+        Task<OperationResult<bool>> DeleteUserAsync(int userId);
     }
 }

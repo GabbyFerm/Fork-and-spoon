@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Users.Commands.UpdatePassword
 {
-    public class UpdatePasswordCommand : IRequest<bool>
+    public class UpdatePasswordCommand : IRequest<OperationResult<bool>>
     {
         public int UserId { get; }
         public string CurrentPassword { get; }

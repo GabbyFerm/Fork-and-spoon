@@ -1,9 +1,10 @@
 ﻿using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Users.Commands.UpdateUserName
 {
-    public class UpdateUserNameCommandHandler : IRequestHandler<UpdateUserNameCommand, bool>
+    public class UpdateUserNameCommandHandler : IRequestHandler<UpdateUserNameCommand, OperationResult<bool>>
     {
         private readonly IUserRepository _userRepository;
 
@@ -12,7 +13,7 @@ namespace ForkAndSpoon.Application.Users.Commands.UpdateUserName
             _userRepository = userRepository;
         }
 
-        public async Task<bool> Handle(UpdateUserNameCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<bool>> Handle(UpdateUserNameCommand request, CancellationToken cancellationToken)
         {
             return await _userRepository.UpdateUserNameAsync(request.UserId, request.NewUserName);
         }

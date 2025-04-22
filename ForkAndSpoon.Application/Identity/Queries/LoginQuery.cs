@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Identity.Queries
 {
-    public class LoginQuery : IRequest<string>
+    public class LoginQuery : IRequest<OperationResult<string>>
     {
         public string Email { get; set; }
         public string Password { get; set; }

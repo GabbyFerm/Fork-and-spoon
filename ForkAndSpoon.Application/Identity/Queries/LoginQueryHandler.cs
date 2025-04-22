@@ -1,10 +1,11 @@
 ﻿using ForkAndSpoon.Application.Identity.Auth;
 using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Identity.Queries
 {
-    public class LoginQueryHandler : IRequestHandler<LoginQuery, string>
+    public class LoginQueryHandler : IRequestHandler<LoginQuery, OperationResult<string>>
     {
         private readonly IAuthRepository _authRepository;
 
@@ -13,7 +14,7 @@ namespace ForkAndSpoon.Application.Identity.Queries
             _authRepository = authRepository;
         }
 
-        public async Task<string> Handle(LoginQuery request, CancellationToken cancellationToken)
+        public async Task<OperationResult<string>> Handle(LoginQuery request, CancellationToken cancellationToken)
         {
             var dto = new UserLoginDto 
             { 

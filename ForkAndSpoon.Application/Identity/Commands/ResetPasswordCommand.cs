@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Identity.Commands
 {
-    public class ResetPasswordCommand : IRequest<bool>
+    public class ResetPasswordCommand : IRequest<OperationResult<bool>>
     {
         public string Email { get; }
         public string NewPassword { get; }

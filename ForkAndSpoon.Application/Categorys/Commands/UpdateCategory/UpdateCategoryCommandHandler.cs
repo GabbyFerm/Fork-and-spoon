@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using ForkAndSpoon.Application.Categorys.DTOs;
-using ForkAndSpoon.Application.Interfaces;
 using ForkAndSpoon.Application.Interfaces.Generic;
 using ForkAndSpoon.Domain.Models;
 using MediatR;
