@@ -9,8 +9,7 @@ namespace ForkAndSpoon.Application.Mappings
         public CategoryProfile()
         {
             CreateMap<Category, CategoryDto>();
-            CreateMap<CategoryCreateDto, Category>();
-            CreateMap<CategoryUpdateDto, Category>();
+            CreateMap<CategoryInputDto, Category>();
         }
     }
 }

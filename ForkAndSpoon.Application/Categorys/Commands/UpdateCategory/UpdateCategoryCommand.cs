@@ -1,9 +1,10 @@
 ﻿using ForkAndSpoon.Application.Categorys.DTOs;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Categorys.Commands.UpdateCategory
 {
-    public class UpdateCategoryCommand : IRequest<CategoryDto>
+    public class UpdateCategoryCommand : IRequest<OperationResult<CategoryDto>>
     {
         public int CategoryID { get; }
         public string Name { get; }
@@ -16,5 +17,4 @@ namespace ForkAndSpoon.Application.Categorys.Commands.UpdateCategory
             Role = role;
         }
     }
-
 }

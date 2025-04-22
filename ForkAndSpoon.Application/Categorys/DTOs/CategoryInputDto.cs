@@ -1,6 +1,6 @@
 ﻿namespace ForkAndSpoon.Application.Categorys.DTOs
 {
-    public class CategoryCreateDto
+    public class CategoryInputDto
     {
         public string Name { get; set; } = null!;
     }

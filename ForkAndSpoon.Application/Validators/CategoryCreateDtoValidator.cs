@@ -3,7 +3,7 @@ using ForkAndSpoon.Application.Categorys.DTOs;
 
 namespace ForkAndSpoon.Application.Validators
 {
-    public class CategoryCreateDtoValidator : AbstractValidator<CategoryCreateDto>
+    public class CategoryCreateDtoValidator : AbstractValidator<CategoryInputDto>
     {
         public CategoryCreateDtoValidator()
         {
