@@ -1,16 +1,16 @@
 ﻿using ForkAndSpoon.Application.Categorys.DTOs;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Categorys.Commands.CreateCategory
 {
-    public class CreateCategoryCommand : IRequest<CategoryDto>
+    public class CreateCategoryCommand : IRequest<OperationResult<CategoryDto>>
     {
-        public string Name { get; set; } = null!;
+        public CategoryInputDto NewCategory { get; }
 
-        public CreateCategoryCommand(string name)
+        public CreateCategoryCommand(CategoryInputDto newCategory)
         {
-            Name = name;
+            NewCategory = newCategory;
         }
     }
-
 }

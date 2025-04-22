@@ -1,20 +1,31 @@
-﻿using ForkAndSpoon.Application.Categorys.DTOs;
-using ForkAndSpoon.Application.Interfaces;
+﻿using AutoMapper;
+using ForkAndSpoon.Application.Categorys.DTOs;
+using ForkAndSpoon.Application.Interfaces.Generic;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Categorys.Queries.GetCategoryById
 {
-    public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery, CategoryDto?>
+    public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery, OperationResult<CategoryDto>>
     {
-        private readonly ICategoryRepository _categoryRepository;
+        private readonly IGenericRepository<Category> _categoryRepository;
+        private readonly IMapper _mapper;
 
-        public GetCategoryByIdQueryHandler(ICategoryRepository categoryRepository) 
-        { 
-            _categoryRepository = categoryRepository;
-        }
-        public async Task<CategoryDto?> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
+        public GetCategoryByIdQueryHandler(IGenericRepository<Category> categoryRepository, IMapper mapper)
         {
-            return await _categoryRepository.GetCategoryByIdAsync(request.CategoryID);
+            _categoryRepository = categoryRepository;
+            _mapper = mapper;
+        }
+        public async Task<OperationResult<CategoryDto>> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
+        {
+            var result = await _categoryRepository.GetByIdAsync(request.CategoryID);
+
+            if (!result.IsSuccess || result.Data == null)
+                return OperationResult<CategoryDto>.Failure("Category not found.");
+
+            var dto = _mapper.Map<CategoryDto>(result.Data);
+
+            return OperationResult<CategoryDto>.Success(dto);
         }
     }
 }

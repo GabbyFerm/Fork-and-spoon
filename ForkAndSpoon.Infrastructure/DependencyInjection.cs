@@ -1,8 +1,11 @@
 ﻿using ForkAndSpoon.Application.ExternalApi;
 using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Application.Interfaces.Generic;
 using ForkAndSpoon.Application.Services;
+using ForkAndSpoon.Domain.Models;
 using ForkAndSpoon.Infrastructure.Database;
 using ForkAndSpoon.Infrastructure.Repositories;
+using ForkAndSpoon.Infrastructure.Repositories.Generic;
 using ForkAndSpoon.Infrastructure.Services.Trivia;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +23,7 @@ namespace ForkAndSpoon.Infrastructure
             // Register Repositories here
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
-            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IGenericRepository<Category>, GenericRepository<Category>>();
             services.AddScoped<IFavoriteRepository, FavoriteRepository>();
             services.AddScoped<IRecipeRepository, RecipeRepository>();
 

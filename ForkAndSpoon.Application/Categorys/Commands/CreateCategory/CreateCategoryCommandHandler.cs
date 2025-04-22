@@ -1,27 +1,31 @@
-﻿using ForkAndSpoon.Application.Categorys.DTOs;
-using ForkAndSpoon.Application.Interfaces;
+﻿using AutoMapper;
+using ForkAndSpoon.Application.Categorys.DTOs;
+using ForkAndSpoon.Application.Interfaces.Generic;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Categorys.Commands.CreateCategory
 {
-    public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryCommand, CategoryDto>
+    public class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryCommand, OperationResult<CategoryDto>>
     {
-        private readonly ICategoryRepository _categoryRepository;
+        private readonly IGenericRepository<Category> _categoryRepository;
+        private readonly IMapper _mapper;
 
-        public CreateCategoryCommandHandler(ICategoryRepository categoryRepository)
+        public CreateCategoryCommandHandler(IGenericRepository<Category> categoryRepository, IMapper mapper)
         {
             _categoryRepository = categoryRepository;
+            _mapper = mapper;
         }
 
-        public async Task<CategoryDto> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<CategoryDto>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
         {
-            var createDto = new CategoryCreateDto
-            {
-                Name = request.Name
-            };
+            var categoryToCreate = _mapper.Map<Category>(request.NewCategory);
 
-            return await _categoryRepository.CreateCategoryAsync(createDto);
+            var result = await _categoryRepository.CreateAsync(categoryToCreate);
+
+            return result.IsSuccess
+            ? OperationResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(result.Data))
+            : OperationResult<CategoryDto>.Failure(result.ErrorMessage!);
         }
     }
-
 }

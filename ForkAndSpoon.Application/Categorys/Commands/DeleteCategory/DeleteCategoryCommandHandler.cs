@@ -1,31 +1,34 @@
-﻿using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.Application.Interfaces.Generic;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Categorys.Commands.DeleteCategory
 {
-    public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryCommand, bool>
+    public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryCommand, OperationResult<bool>>
     {
-        private readonly ICategoryRepository _categoryRepository;
+        private readonly IGenericRepository<Category> _categoryRepository;
 
-        public DeleteCategoryCommandHandler(ICategoryRepository categoryRepository)
+        public DeleteCategoryCommandHandler(IGenericRepository<Category> categoryRepository)
         {
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<bool> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<bool>> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
         {
-            // Only allow deleting "Uncategorized" if role is Admin
-            var category = await _categoryRepository.GetCategoryByIdAsync(request.CategoryID);
+            var existingCategoryResult = await _categoryRepository.GetByIdAsync(request.CategoryID);
 
-            if (category == null)
-                return false;
+            if (!existingCategoryResult.IsSuccess || existingCategoryResult.Data == null)
+                return OperationResult<bool>.Failure("Category not found.");
 
-            if (category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)
-                && request.Role != "Admin")
-                return false;
+            var categoryToDelete = existingCategoryResult.Data;
 
-            return await _categoryRepository.DeleteCategoryAsync(request.CategoryID);
+            // Only allow deleting 'Uncategorized' if role is Admin
+            if (categoryToDelete.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase) && request.Role != "Admin")
+                return OperationResult<bool>.Failure("Only Admin can delete the 'Uncategorized' category.");
+
+            return await _categoryRepository.DeleteAsync(categoryToDelete);
         }
     }
+
 
 }

@@ -1,34 +1,45 @@
-﻿using ForkAndSpoon.Application.Categorys.DTOs;
+﻿using AutoMapper;
+using ForkAndSpoon.Application.Categorys.DTOs;
 using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Application.Interfaces.Generic;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Categorys.Commands.UpdateCategory
 {
-    public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryCommand, CategoryDto?>
+    public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryCommand, OperationResult<CategoryDto>>
     {
-        private readonly ICategoryRepository _categoryRepository;
+        private readonly IGenericRepository<Category> _categoryRepository;
+        private readonly IMapper _mapper;
 
-        public UpdateCategoryCommandHandler(ICategoryRepository categoryRepository)
+        public UpdateCategoryCommandHandler(IGenericRepository<Category> categoryRepository, IMapper mapper)
         {
             _categoryRepository = categoryRepository;
+            _mapper = mapper;
         }
 
-        public async Task<CategoryDto?> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<CategoryDto>> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
         {
-            var category = await _categoryRepository.GetCategoryByIdAsync(request.CategoryID);
+            var categoryResult = await _categoryRepository.GetByIdAsync(request.CategoryID);
+            if (!categoryResult.IsSuccess || categoryResult.Data == null)
+                return OperationResult<CategoryDto>.Failure("Category not found.");
 
-            if (category == null) throw new Exception("Category not found");
+            var category = categoryResult.Data;
 
+            // Restrictin access to renamin 'Uncategorized' to only admin
             if (category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)
-                && request.Role != "Admin")
+            && request.Role != "Admin")
             {
-                throw new UnauthorizedAccessException("You are not allowed to update the 'Uncategorized' category.");
+                return OperationResult<CategoryDto>.Failure("Only admins can update the 'Uncategorized' category.");
             }
 
-            var categoryToUpdate = new CategoryUpdateDto { Name = request.Name };
-            return await _categoryRepository.UpdateCategoryAsync(request.CategoryID, categoryToUpdate);
-        }
+            category.Name = request.Name;
 
+            var updateResult = await _categoryRepository.UpdateAsync(category);
+            return updateResult.IsSuccess
+                ? OperationResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(updateResult.Data))
+            : OperationResult<CategoryDto>.Failure(updateResult.ErrorMessage!);
+        }
     }
 
 }
