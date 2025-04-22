@@ -1,9 +1,10 @@
 ﻿using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Users.Commands.DeleteUser
 {
-    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
+    public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, OperationResult<bool>>
     {
         private readonly IUserRepository _userRepository;
 
@@ -12,16 +13,15 @@ namespace ForkAndSpoon.Application.Users.Commands.DeleteUser
             _userRepository = userRepository;
         }
 
-        public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<bool>> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
         {
-            // Allow if user is admin or deleting their own account
-            if (request.CallerRole == "Admin" || request.TargetUserId == request.CallerUserId)
+            // Only allow users to delete themselves, or allow Admins to delete anyone
+            if (request.TargetUserId != request.CallerUserId && request.CallerRole == "Admin")
             {
-                return await _userRepository.DeleteUserAsync(request.TargetUserId);
+                return OperationResult<bool>.Failure("Not authorized to delete this user.");
             }
 
-            // Otherwise deny
-            return false;
+            return await _userRepository.DeleteUserAsync(request.TargetUserId);
         }
     }
 }

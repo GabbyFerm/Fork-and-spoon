@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Users.Commands.UpdateEmail
 {
-    public class UpdateEmailCommand : IRequest<bool>
+    public class UpdateEmailCommand : IRequest<OperationResult<bool>>
     {
         public int UserId { get; }
         public string NewEmail { get; }

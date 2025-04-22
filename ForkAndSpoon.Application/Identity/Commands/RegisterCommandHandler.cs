@@ -1,10 +1,11 @@
 ﻿using ForkAndSpoon.Application.Identity.Auth;
 using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Identity.Commands
 {
-    public class RegisterCommandHandler : IRequestHandler<RegisterCommand, string>
+    public class RegisterCommandHandler : IRequestHandler<RegisterCommand, OperationResult<string>>
     {
         private readonly IAuthRepository _authRepository;
 
@@ -13,14 +14,13 @@ namespace ForkAndSpoon.Application.Identity.Commands
             _authRepository = authRepository;
         }
 
-        public async Task<string> Handle(RegisterCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<string>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
-            var dto = new UserRegisterDto 
-            { 
+            var dto = new UserRegisterDto
+            {
                 UserName = request.UserName,
                 Email = request.Email,
                 Password = request.Password,
-            
             };
 
             return await _authRepository.RegisterAsync(dto);

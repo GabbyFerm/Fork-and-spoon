@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using ForkAndSpoon.Application.Interfaces;
-using ForkAndSpoon.Application.Users.DTOs;
+using ForkAndSpoon.Domain.Models;
 using ForkAndSpoon.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,94 +17,141 @@ namespace ForkAndSpoon.Infrastructure.Repositories
             _mapper = mapper;
         }
 
-        public async Task<List<UserDto>> GetAllUsersAsync()
+        public async Task<OperationResult<List<User>>> GetAllAsync()
         {
-            var users = await _context.Users.ToListAsync();
-            return _mapper.Map<List<UserDto>>(users);
-        }
-
-        public async Task<UserDto?> GetUserByIdAsync(int userId)
-        {
-            var user = await _context.Users.FindAsync(userId);
-            return user == null ? null : _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<bool> DeleteUserAsync(int userId)
-        {
-            var user = await _context.Users
-                .Include(user => user.FavoriteRecipes)
-                .Include(user => user.Ratings)
-                .FirstOrDefaultAsync(u => u.UserID == userId);
-
-            if (user == null) 
-                return false;
-
-            // Remove related favorites
-            if (user.FavoriteRecipes.Any())
+            try
             {
-                _context.FavoriteRecipes.RemoveRange(user.FavoriteRecipes);
+                var users = await _context.Users.ToListAsync();
+                return OperationResult<List<User>>.Success(users);
             }
-
-            // Remove related ratings
-            if (user.Ratings.Any())
+            catch (Exception ex)
             {
-                _context.Ratings.RemoveRange(user.Ratings);
+                return OperationResult<List<User>>.Failure($"Error fetching users: {ex.Message}");
             }
-
-            // EF will set CreatedBy = null in Recipes due to ON DELETE SET NULL
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return true;
         }
 
-        public async Task<bool> UpdateEmailAsync(int userId, string newEmail)
+        public async Task<OperationResult<User>> GetByIdAsync(int userId)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return false;
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                    return OperationResult<User>.Failure("User not found");
 
-            // Check if the new email already exists in the database
-            var emailExists = await _context.Users.AnyAsync(user => user.Email == newEmail);
-            if (emailExists) throw new InvalidOperationException("Email is already registered.");
-
-            // Update the user's email
-            user.Email = newEmail;
-            await _context.SaveChangesAsync();
-
-            return true;
+                return OperationResult<User>.Success(user);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<User>.Failure($"Error fetching user: {ex.Message}");
+            }
         }
 
-        public async Task<bool> UpdatePasswordAsync(int userId, string currentPassword, string newPassword)
+        public async Task<OperationResult<bool>> DeleteUserAsync(int userId)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return false;
+            try
+            {
+                var user = await _context.Users
+                    .Include(user => user.FavoriteRecipes)
+                    .Include(user => user.Ratings)
+                    .FirstOrDefaultAsync(u => u.UserID == userId);
 
-            // Verify the current password
-            var isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(currentPassword, user.Password);
-            if (!isCurrentPasswordValid) return false;
+                if (user == null)
+                    return OperationResult<bool>.Failure("User not found.");
 
-            // Hash the new password and update
-            user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
-            await _context.SaveChangesAsync();
+                // Remove related favorites
+                if (user.FavoriteRecipes.Any())
+                    _context.FavoriteRecipes.RemoveRange(user.FavoriteRecipes);
 
-            return true;
+                // Remove related ratings
+                if (user.Ratings.Any())
+                    _context.Ratings.RemoveRange(user.Ratings);
+
+                // Remove the user
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return OperationResult<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<bool>.Failure($"Failed to delete user: {ex.Message}");
+            }
         }
 
-        public async Task<bool> UpdateUserNameAsync(int userId, string newUserName)
+        public async Task<OperationResult<bool>> UpdateEmailAsync(int userId, string newEmail)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return false;
+            try 
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                    return OperationResult<bool>.Failure("User not found.");
 
-            // Check if the new username already exists in the database
-            var userNameExists = await _context.Users.AnyAsync(user => user.UserName.ToLower() == newUserName.ToLower() && user.UserID != userId);
-            if (userNameExists) throw new InvalidOperationException("Username is already registered.");
+                // Check if the new email already exists in the database
+                var emailExists = await _context.Users.AnyAsync(user => user.Email == newEmail);
+                if (emailExists)
+                    return OperationResult<bool>.Failure("Email is already registered.");
 
-            // Update the user's username
-            user.UserName = newUserName;
-            await _context.SaveChangesAsync();
+                // Update the user's email
+                user.Email = newEmail;
+                await _context.SaveChangesAsync();
 
-            return true;
+                return OperationResult<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<bool>.Failure($"Failed to update email: {ex.Message}");
+            }
+        }
+
+        public async Task<OperationResult<bool>> UpdatePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            try 
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                    return OperationResult<bool>.Failure("User not found.");
+
+                // Verify the current password
+                var isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(currentPassword, user.Password);
+                if (!isCurrentPasswordValid)
+                    return OperationResult<bool>.Failure("Incorrect current password.");
+
+                // Hash the new password and update
+                user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
+                await _context.SaveChangesAsync();
+
+                return OperationResult<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<bool>.Failure($"Failed to update password: {ex.Message}");
+            }
+        }
+
+        public async Task<OperationResult<bool>> UpdateUserNameAsync(int userId, string newUserName)
+        {
+            try 
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null)
+                    return OperationResult<bool>.Failure("User not found.");
+
+                // Check if the new username already exists in the database
+                var userNameExists = await _context.Users.AnyAsync(user => user.UserName.ToLower() == newUserName.ToLower() && user.UserID != userId);
+
+                if (userNameExists)
+                    return OperationResult<bool>.Failure("Username is already taken.");
+
+                // Update the user's username
+                user.UserName = newUserName;
+                await _context.SaveChangesAsync();
+
+                return OperationResult<bool>.Success(true);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult<bool>.Failure($"Failed to update username: {ex.Message}");
+            }
         }
     }
-
 }

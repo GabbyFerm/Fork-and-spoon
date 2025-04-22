@@ -24,9 +24,12 @@ namespace ForkAndSpoon.API.Controllers
         public async Task<IActionResult> Register([FromBody] UserRegisterDto registerDto)
         {
             var command = new RegisterCommand(registerDto.UserName, registerDto.Email, registerDto.Password);
-            var token = await _mediator.Send(command);
+            var result = await _mediator.Send(command);
 
-            return Ok(token);
+            if (!result.IsSuccess)
+                return BadRequest(result.ErrorMessage);
+
+            return Ok(result);
         }
 
         [AllowAnonymous]
@@ -34,9 +37,12 @@ namespace ForkAndSpoon.API.Controllers
         public async Task<IActionResult> Login(UserLoginDto loginDto)
         {
             var query = new LoginQuery(loginDto.Email, loginDto.Password);
-            var token = await _mediator.Send(query);
+            var result = await _mediator.Send(query);
 
-            return Ok(token);
+            if (!result.IsSuccess)
+                return Unauthorized(result.ErrorMessage);
+
+            return Ok(result);
         }
 
         [AllowAnonymous]
@@ -47,8 +53,8 @@ namespace ForkAndSpoon.API.Controllers
 
             var result = await _mediator.Send(command);
 
-            if (!result)
-                return NotFound("user with that email was not found.");
+            if (!result.IsSuccess)
+                return NotFound(result.ErrorMessage);
 
             return NoContent(); // 204 response if success and nothing to return
         }

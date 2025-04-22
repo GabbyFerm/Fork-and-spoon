@@ -29,30 +29,30 @@ namespace ForkAndSpoon.API.Controllers
         [HttpGet("get-all")]
         public async Task<IActionResult> GetAllUsers()
         {
-            var users = await _mediator.Send(new GetAllUsersQuery());
+            var result = await _mediator.Send(new GetAllUsersQuery());
 
-            return Ok(users);
+            return Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("get/{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
-            var user = await _mediator.Send(new GetUserByIdQuery(id));
+            var result = await _mediator.Send(new GetUserByIdQuery(id));
 
-            if (user == null)
+            if (!result.IsSuccess)
                 return NotFound("User not found.");
 
-            return Ok(user);
+            return Ok(result);
         }
 
         [Authorize]
-        [HttpGet("get-me")] // Logged in user
+        [HttpGet("get-me")] // Logged in result
         public async Task<IActionResult> GetLoggedInUser()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
-                return Unauthorized("Unable to identify the user from token.");
+                return Unauthorized("Unable to identify the result from token.");
 
             int userId = int.Parse(userIdClaim.Value);
             var user = await _mediator.Send(new GetLoggedInUserQuery(userId));
@@ -64,12 +64,13 @@ namespace ForkAndSpoon.API.Controllers
         public async Task<IActionResult> DeleteUser(int id)
         {
             var callerId = ClaimsHelper.GetUserIdFromClaims(User);
+
             string callerRole = ClaimsHelper.GetUserRoleFromClaims(User);
 
             var result = await _mediator.Send(new DeleteUserCommand(id, callerId, callerRole));
 
-            if (!result)
-                return Forbid(); // User not allowed to delete someone else
+            if (!result.IsSuccess)
+                return BadRequest(result); // User not allowed to delete someone else
 
             return NoContent();
         }
@@ -83,7 +84,10 @@ namespace ForkAndSpoon.API.Controllers
             var command = new UpdateEmailCommand(userId, updateDto.Email);
             var result = await _mediator.Send(command);
 
-            return result ? NoContent() : BadRequest("Email already in use or update failed.");
+            if (!result.IsSuccess)
+                return BadRequest(result.ErrorMessage);
+
+            return NoContent();
         }
 
         [Authorize]
@@ -95,7 +99,10 @@ namespace ForkAndSpoon.API.Controllers
             var command = new UpdatePasswordCommand(userId, updateDto.CurrentPassword, updateDto.NewPassword);
             var result = await _mediator.Send(command);
 
-            return result ? NoContent() : BadRequest("Current password is incorrect or update failed.");
+            if (!result.IsSuccess)
+                return BadRequest(result.ErrorMessage);
+
+            return NoContent();
         }
 
         [Authorize]
@@ -107,7 +114,10 @@ namespace ForkAndSpoon.API.Controllers
             var command = new UpdateUserNameCommand(userId, updateDto.UserName);
             var result = await _mediator.Send(command);
 
-            return result ? NoContent() : BadRequest("Username already in use or update failed.");
+            if (!result.IsSuccess)
+                return BadRequest(result.ErrorMessage);
+
+            return NoContent();
         }
     }
 }

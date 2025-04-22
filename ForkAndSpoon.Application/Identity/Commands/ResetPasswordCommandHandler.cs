@@ -1,10 +1,11 @@
 ﻿using ForkAndSpoon.Application.Identity.DTOs;
 using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Identity.Commands
 {
-    public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand, bool>
+    public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand, OperationResult<bool>>
     {
         private readonly IAuthRepository _authRepository;
 
@@ -12,7 +13,7 @@ namespace ForkAndSpoon.Application.Identity.Commands
         {
             _authRepository = authRepository;
         }
-        public async Task<bool> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<bool>> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
         {
             var dto = new ResetPasswordDto 
             { 

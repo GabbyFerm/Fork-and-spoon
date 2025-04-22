@@ -79,7 +79,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new DeleteCategoryCommand(id, role));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
             return NoContent();
         }
