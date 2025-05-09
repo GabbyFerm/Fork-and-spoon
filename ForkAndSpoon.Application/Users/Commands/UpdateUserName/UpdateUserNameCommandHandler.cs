@@ -15,7 +15,22 @@ namespace ForkAndSpoon.Application.Users.Commands.UpdateUserName
 
         public async Task<OperationResult<bool>> Handle(UpdateUserNameCommand request, CancellationToken cancellationToken)
         {
-            return await _userRepository.UpdateUserNameAsync(request.UserId, request.NewUserName);
+            // Fetch user by ID
+            var user = await _userRepository.GetUserByIdAsync(request.UserId);
+            if (user == null)
+                return OperationResult<bool>.Failure("User not found.");
+
+            // Check for username conflict
+            var userNameTaken = await _userRepository.UserNameExistsAsync(request.NewUserName, request.UserId);
+            if (userNameTaken)
+                return OperationResult<bool>.Failure("Username is already taken.");
+
+            // Update username and save
+            user.UserName = request.NewUserName;
+            await _userRepository.SaveChangesAsync();
+
+            // Return success
+            return OperationResult<bool>.Success(true);
         }
     }
 }

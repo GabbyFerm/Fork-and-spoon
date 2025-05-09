@@ -7,9 +7,11 @@ namespace ForkAndSpoon.Application.Validators
     {
         public UpdatePasswordDtoValidator()
         {
+            // Current password is required
             RuleFor(dto => dto.CurrentPassword)
                 .NotEmpty().WithMessage("Current password is required.");
 
+            // New password must be strong
             RuleFor(dto => dto.NewPassword)
                 .NotEmpty().WithMessage("New password is required.")
                 .MinimumLength(8).WithMessage("New password must be at least 8 characters long.")

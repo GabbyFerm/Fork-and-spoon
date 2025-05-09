@@ -1,17 +1,20 @@
 ﻿using ForkAndSpoon.Application.Recipes.DTOs;
+using ForkAndSpoon.Domain.Models;
 
 namespace ForkAndSpoon.Application.Interfaces
 {
-    public interface IRecipeRepository
+    // Repository handles basic CRUD operations for Recipe entities.
+    // For loading full relational data (e.g., Ingredients, Category, DietaryPreferences), use IRecipeLoaderService.
+
+    public interface IRecipeRepository 
     {
-        Task<List<RecipeReadDto>> GetAllRecipesAsync(string? categoryFilter = null, string? ingredientFilter = null, string? dietaryFilter = null, string ? sortOrder = null, int page = 1, int pageSize = 10);
-        Task<RecipeReadDto?> GetRecipeByIdAsync(int id);
-        Task<RecipeReadDto> CreateRecipeAsync(RecipeCreateDto dto, int userId);
-        Task<RecipeReadDto?> UpdateRecipeAsync(int recipeId, RecipeUpdateDto updatedRecipe, int userId, string role);
-        Task<RecipeReadDto?> UpdateDietaryPreferencesAsync(int recipeId, int userId, RecipeDietaryPreferenceUpdateDto updateDto);
-        Task<bool> DeleteRecipeAsync(int recipeId, int userId, string role);
-        Task<List<RecipeReadDto>> GetDeletedRecipesAsync();
-        Task<RecipeReadDto?> GetDeletedRecipeByIdAsync(int recipeId);
-        Task<bool> RestoreDeletedRecipeAsync(int recipeId);
+        Task<IQueryable<Recipe>> GetAllRecipesQueryableAsync(); // Queryable for filtering, sorting, pagination (non-deleted recipes)
+        Task<OperationResult<RecipeReadDto>> GetRecipeByIdAsync(int recipeId); // Returns a single recipe as a DTO
+        Task<Recipe?> GetRecipeEntityByIdAsync(int recipeId); // Returns a recipe entity (used for internal update/delete logic)
+        Task<Recipe> CreateRecipeAsync(Recipe recipe); // Creates a new recipe (returns entity)
+        Task<List<Recipe>> GetDeletedRecipesAsync(); // Returns all soft-deleted recipes
+        Task<Recipe?> GetDeletedRecipeByIdAsync(int recipeId); // Returns a deleted recipe with full relations
+        Task<Recipe?> GetRecipeOwnedByUserAsync(int recipeId, int userId); // Ensures recipe is owned by the given user
+        Task<OperationResult<bool>> SaveChangesAsync(); // Saves changes to the database
     }
 }

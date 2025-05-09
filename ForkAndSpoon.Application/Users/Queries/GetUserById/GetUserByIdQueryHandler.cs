@@ -22,7 +22,7 @@ namespace ForkAndSpoon.Application.Users.Queries.GetUserById
             var result = await _userRepository.GetByIdAsync(request.UserId);
 
             if (!result.IsSuccess || result.Data == null)
-                return OperationResult<UserDto>.Failure(result.ErrorMessage ?? "User not found");
+                return OperationResult<UserDto>.Failure(result.ErrorMessage ?? "User not found.");
 
             var userDto = _mapper.Map<UserDto>(result.Data);
 

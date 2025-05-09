@@ -4,7 +4,7 @@ using MediatR;
 
 namespace ForkAndSpoon.Application.Users.Queries.GetUserById
 {
-    public class GetUserByIdQuery : IRequest<OperationResult<UserDto?>>
+    public class GetUserByIdQuery : IRequest<OperationResult<UserDto>>
     {
         public int UserId { get; }
 

@@ -1,10 +1,10 @@
-﻿using ForkAndSpoon.Application.Identity.Auth;
-using ForkAndSpoon.Application.Identity.Commands;
-using ForkAndSpoon.Application.Identity.DTOs;
-using ForkAndSpoon.Application.Identity.Queries;
-using MediatR;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MediatR;
+using ForkAndSpoon.Application.Authorize.Commands.Register;
+using ForkAndSpoon.Application.Authorize.Commands.ResetPassword;
+using ForkAndSpoon.Application.Authorize.Queries;
+using ForkAndSpoon.Application.Authorize.DTOs;
 
 namespace ForkAndSpoon.API.Controllers
 {

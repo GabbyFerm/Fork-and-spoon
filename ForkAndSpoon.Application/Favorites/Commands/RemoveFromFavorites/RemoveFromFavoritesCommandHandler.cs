@@ -1,9 +1,10 @@
 ﻿using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Favorites.Commands.RemoveFromFavorites
 {
-    public class RemoveFromFavoritesCommandHandler : IRequestHandler<RemoveFromFavoritesCommand, bool>
+    public class RemoveFromFavoritesCommandHandler : IRequestHandler<RemoveFromFavoritesCommand, OperationResult<string>>
     {
         private readonly IFavoriteRepository _favoriteRepository;
 
@@ -12,7 +13,7 @@ namespace ForkAndSpoon.Application.Favorites.Commands.RemoveFromFavorites
             _favoriteRepository = favoriteRepository;
         }
 
-        public async Task<bool> Handle(RemoveFromFavoritesCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<string>> Handle(RemoveFromFavoritesCommand request, CancellationToken cancellationToken)
         {
             return await _favoriteRepository.RemoveFavoriteAsync(request.UserId, request.RecipeId);
         }

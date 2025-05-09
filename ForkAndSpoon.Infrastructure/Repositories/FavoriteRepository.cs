@@ -18,37 +18,47 @@ namespace ForkAndSpoon.Application.Services
             _autoMapper = autoMapper;
         }
 
-        public async Task<bool> AddFavoriteAsync(int userId, int recipeId)
+        public async Task<OperationResult<string>> AddFavoriteAsync(int userId, int recipeId)
         {
-            // Check if the recipe exists and is not soft-deleted
-            var recipeExists = await _context.Recipes.AnyAsync(recipe => recipe.RecipeID == recipeId && !recipe.IsDeleted);
-
-            if (!recipeExists)
+            try
             {
-               throw new ArgumentException("Recipe does not exist or has been deleted.");
+                // Check if the recipe exists and is not soft-deleted
+                var recipeExists = await _context.Recipes.AnyAsync(recipe => recipe.RecipeID == recipeId && !recipe.IsDeleted);
+
+                if (!recipeExists)
+                    return OperationResult<string>.Failure("Recipe does not exist or has been deleted.");
+
+                // Check if the recipe is already in the user's favorites
+                var alreadyFavorited = await _context.FavoriteRecipes.AnyAsync(favorite => favorite.UserID == userId && favorite.RecipeID == recipeId);
+
+                if (alreadyFavorited)
+                    return OperationResult<string>.Failure("Recipe already in favorites.");
+
+                // Create and add the new favorite entry
+                var favorite = new FavoriteRecipe
+                {
+                    UserID = userId,
+                    RecipeID = recipeId
+                };
+
+                _context.FavoriteRecipes.Add(favorite);
+                await _context.SaveChangesAsync();
+
+                return OperationResult<string>.Success("Recipe added to favorites.");
             }
-
-            // Check if favorite already exists
-            var alreadyFavorited = await _context.FavoriteRecipes.AnyAsync(f => f.UserID == userId && f.RecipeID == recipeId);
-
-            if (alreadyFavorited)
-                return false;
-
-            var favorite = new FavoriteRecipe
+            catch (Exception ex) 
             {
-                UserID = userId,
-                RecipeID = recipeId
-            };
-
-            _context.FavoriteRecipes.Add(favorite);
-            await _context.SaveChangesAsync();
-
-            return true;
+                // Handle unexpected errors
+                return OperationResult<string>.Failure($"Error adding favorite: {ex.Message}.");
+            }
         }
 
-        public async Task<List<RecipeReadDto>> GetUserFavoritesAsync(int userId)
+        public async Task<OperationResult<List<RecipeReadDto>>> GetUserFavoritesAsync(int userId)
         {
-            var favoriteRecipes = await _context.FavoriteRecipes
+            try
+            {
+                // Fetch the user's favorite recipes (excluding deleted ones), including full related data
+                var favoriteRecipes = await _context.FavoriteRecipes
                 .Where(favorite => favorite.UserID == userId && !favorite.Recipe.IsDeleted)
                 .Include(favorite => favorite.Recipe)
                     .ThenInclude(recipe => recipe.Category)
@@ -61,20 +71,40 @@ namespace ForkAndSpoon.Application.Services
                 .Select(favorite => favorite.Recipe)
                 .ToListAsync();
 
-            return _autoMapper.Map<List<RecipeReadDto>>(favoriteRecipes);
+                // Map to DTOs
+                var recipeDtos = _autoMapper.Map<List<RecipeReadDto>>(favoriteRecipes);
+
+                return OperationResult<List<RecipeReadDto>>.Success(recipeDtos);
+            }
+            catch (Exception ex) 
+            {
+                // Handle unexpected errors
+                return OperationResult<List<RecipeReadDto>>.Failure($"Error fetching favorites: {ex.Message}.");
+            }
         }
 
-        public async Task<bool> RemoveFavoriteAsync(int userId, int recipeId)
+        public async Task<OperationResult<string>> RemoveFavoriteAsync(int userId, int recipeId)
         {
-            var favorite = await _context.FavoriteRecipes.FirstOrDefaultAsync(favorite => favorite.UserID == userId && favorite.RecipeID == recipeId);
+            try 
+            {
+                // Look up the favorite entry
+                var favorite = await _context.FavoriteRecipes.FirstOrDefaultAsync(favoriteRecipe => favoriteRecipe.UserID == userId && favoriteRecipe.RecipeID == recipeId);
 
-            if (favorite == null) return false;
+                if (favorite == null)
+                    return OperationResult<string>.Failure("Favorite not found.");
 
-            _context.FavoriteRecipes.Remove(favorite);
+                // Remove the favorite entry
+                _context.FavoriteRecipes.Remove(favorite);
+                await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
-
-            return true;
+                return OperationResult<string>.Success("Recipe removed from favorites.");
+            }
+            
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                return OperationResult<string>.Failure($"Failed to delete favorite: {ex.Message}.");
+            }
         }
     }
 }

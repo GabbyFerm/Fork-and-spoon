@@ -15,6 +15,19 @@ namespace ForkAndSpoon.Infrastructure.Database.Seeders
 
         public async Task SeedAsync()
         {
+            // Ensure Admin user exists
+            if (!await _context.Users.AnyAsync(user => user.Email == "admin@forkandspoon.com"))
+            {
+                var adminUser = new User
+                {
+                    UserName = "admin",
+                    Email = "admin@forkandspoon.com",
+                    Password = BCrypt.Net.BCrypt.HashPassword("Admin123!"), // use a test password
+                    Role = "Admin"
+                };
+                _context.Users.Add(adminUser);
+            }
+
             // Seed Users — only if fewer than 5 exist
             if (await _context.Users.CountAsync() < 5)
             {
@@ -61,9 +74,9 @@ namespace ForkAndSpoon.Infrastructure.Database.Seeders
                             CreatedBy = existingUser.UserID,
                             RecipeIngredients = new List<RecipeIngredient>
                             {
-                                new() { Ingredient = new Ingredient { Name = "Spaghetti" } },
-                                new() { Ingredient = new Ingredient { Name = "Minced meat" } },
-                                new() { Ingredient = new Ingredient { Name = "Tomato sauce" } }
+                                new() { Ingredient = new Ingredient { Name = "Spaghetti" }, Quantity = "200g" },
+                                new() { Ingredient = new Ingredient { Name = "Minced meat" }, Quantity = "300g" },
+                                new() { Ingredient = new Ingredient { Name = "Tomato sauce" }, Quantity = "1 cup" }
                             }
                         },
                         new()
@@ -75,9 +88,9 @@ namespace ForkAndSpoon.Infrastructure.Database.Seeders
                             CreatedBy = existingUser.UserID,
                             RecipeIngredients = new List<RecipeIngredient>
                             {
-                                new() { Ingredient = new Ingredient { Name = "Bread" } },
-                                new() { Ingredient = new Ingredient { Name = "Avocado" } },
-                                new() { Ingredient = new Ingredient { Name = "Salt" } }
+                                new() { Ingredient = new Ingredient { Name = "Bread" }, Quantity = "2 slices" },
+                                new() { Ingredient = new Ingredient { Name = "Avocado" }, Quantity = "1 whole" },
+                                new() { Ingredient = new Ingredient { Name = "Salt" }, Quantity = "To taste" }
                             }
                         }
                     };

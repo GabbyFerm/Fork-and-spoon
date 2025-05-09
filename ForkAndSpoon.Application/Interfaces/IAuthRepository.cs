@@ -1,13 +1,19 @@
-﻿using ForkAndSpoon.Application.Identity.Auth;
-using ForkAndSpoon.Application.Identity.DTOs;
-using ForkAndSpoon.Domain.Models;
+﻿using ForkAndSpoon.Domain.Models;
 
 namespace ForkAndSpoon.Application.Interfaces
 {
     public interface IAuthRepository
     {
-        Task<OperationResult<string>> LoginAsync(UserLoginDto userLoginDto);
-        Task<OperationResult<string>> RegisterAsync(UserRegisterDto userRegisterDto);
-        Task<OperationResult<bool>> ResetPasswordAsync(ResetPasswordDto resetDto);
+        // Retrieves a user by their email address.
+        Task<User?> GetUserByEmailAsync(string email);
+
+        // Checks if an email is already registered in the system.
+        Task<bool> EmailExistsAsync(string email);
+
+        // Adds a new user to the database (registration).
+        Task CreateUserAsync(User user);
+
+        // Saves pending changes to the database and wraps the result.
+        Task<OperationResult<bool>> SaveChangesAsync();
     }
 }

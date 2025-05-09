@@ -7,9 +7,9 @@
         public required string Email { get; set; }
         public required string Password { get; set; }
 
-        public string Role { get; set; } = "User"; // Default role to those who registers
+        public string Role { get; set; } = "User";
 
-        // Navigation properties
+        // Navigation
         public ICollection<Recipe> CreatedRecipes { get; set; } = new List<Recipe>();
         public ICollection<FavoriteRecipe> FavoriteRecipes { get; set; } = new List<FavoriteRecipe>();
         public ICollection<Rating> Ratings { get; set; } = new List<Rating>();

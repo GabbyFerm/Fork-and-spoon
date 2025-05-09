@@ -18,13 +18,17 @@ namespace ForkAndSpoon.Application.Categorys.Queries.GetCategoryById
         }
         public async Task<OperationResult<CategoryDto>> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
         {
+            // Fetch category by ID
             var result = await _categoryRepository.GetByIdAsync(request.CategoryID);
 
+            // If not found or failed, return failure
             if (!result.IsSuccess || result.Data == null)
                 return OperationResult<CategoryDto>.Failure("Category not found.");
 
+            // Map entity to DTO
             var dto = _mapper.Map<CategoryDto>(result.Data);
 
+            // Return success with mapped DTO
             return OperationResult<CategoryDto>.Success(dto);
         }
     }

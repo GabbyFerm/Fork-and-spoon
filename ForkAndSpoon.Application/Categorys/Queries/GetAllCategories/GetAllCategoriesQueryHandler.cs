@@ -19,12 +19,17 @@ namespace ForkAndSpoon.Application.Categorys.Queries.GetAllCategories
 
         public async Task<OperationResult<List<CategoryDto>>> Handle(GetAllCategoriesQuery request, CancellationToken cancellationToken)
         {
+            // Fetch all categories from repository
             var result = await _categoryRepository.GetAllAsync();
 
+            // If fetching failed, return error message
             if (!result.IsSuccess)
                 return OperationResult<List<CategoryDto>>.Failure(result.ErrorMessage ?? "Failed to fetch categories.");
 
+            // Map entities to DTOs
             var dtoList = _mapper.Map<List<CategoryDto>>(result.Data);
+
+            // Return success with mapped DTO list
             return OperationResult<List<CategoryDto>>.Success(dtoList);
         }
     }

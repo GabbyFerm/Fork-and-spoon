@@ -1,10 +1,11 @@
 ﻿using ForkAndSpoon.Application.Interfaces;
 using ForkAndSpoon.Application.Recipes.DTOs;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Favorites.Queries.GetUserFavorites
 {
-    public class GetUserFavoritesQueryHandler : IRequestHandler<GetUserFavoritesQuery, List<RecipeReadDto>>
+    public class GetUserFavoritesQueryHandler : IRequestHandler<GetUserFavoritesQuery, OperationResult<List<RecipeReadDto>>>
     {
         private readonly IFavoriteRepository _favoriteRepository;
 
@@ -13,7 +14,7 @@ namespace ForkAndSpoon.Application.Favorites.Queries.GetUserFavorites
             _favoriteRepository = favoriteRepository;
         }
 
-        public async Task<List<RecipeReadDto>> Handle(GetUserFavoritesQuery request, CancellationToken cancellationToken)
+        public async Task<OperationResult<List<RecipeReadDto>>> Handle(GetUserFavoritesQuery request, CancellationToken cancellationToken)
         {
             return await _favoriteRepository.GetUserFavoritesAsync(request.UserId);
         }

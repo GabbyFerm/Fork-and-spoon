@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ForkAndSpoon.Infrastructure.Repositories.Generic
 {
+    // A generic repository that handles basic CRUD operations for any entity type T
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         protected readonly ForkAndSpoonDbContext _context;
@@ -13,18 +14,19 @@ namespace ForkAndSpoon.Infrastructure.Repositories.Generic
         public GenericRepository(ForkAndSpoonDbContext context)
         {
             _context = context;
-            _dbSet = _context.Set<T>();
+            _dbSet = _context.Set<T>(); // Gets the DbSet for the type T (e.g., Users, Recipes)
         }
 
         public async Task<OperationResult<List<T>>> GetAllAsync()
         {
             try
             {
-                var list = await _dbSet.ToListAsync();
-                return OperationResult<List<T>>.Success(list);
+                var list = await _dbSet.ToListAsync(); // Retrieve all entities
+                return OperationResult<List<T>>.Success(list); // Return success with the list
             }
             catch (Exception ex)
             {
+                // Handle unexpected errors
                 return OperationResult<List<T>>.Failure($"Failed to retrieve list: {ex.Message}");
             }
         }
@@ -32,14 +34,15 @@ namespace ForkAndSpoon.Infrastructure.Repositories.Generic
         {
             try
             {
-                var entity = await _dbSet.FindAsync(id);
+                var entity = await _dbSet.FindAsync(id); // Try to find the entity
                 if (entity == null)
-                    return OperationResult<T>.Failure("Entity not found");
+                    return OperationResult<T>.Failure("Entity not found"); // Return failure if not found
 
-                return OperationResult<T>.Success(entity);
+                return OperationResult<T>.Success(entity); // Return success if found
             }
             catch (Exception ex)
             {
+                // Handle unexpected errors
                 return OperationResult<T>.Failure($"Failed to retrieve entity: {ex.Message}");
             }
         }
@@ -47,12 +50,13 @@ namespace ForkAndSpoon.Infrastructure.Repositories.Generic
         {
             try
             {
-                await _dbSet.AddAsync(entity);
-                await _context.SaveChangesAsync();
+                await _dbSet.AddAsync(entity); // Add the entity to the DbSet
+                await _context.SaveChangesAsync(); // Save changes to the database
                 return OperationResult<T>.Success(entity);
             }
             catch (Exception ex)
             {
+                // Handle unexpected errors
                 return OperationResult<T>.Failure($"Failed to create entity: {ex.Message}");
             }
         }
@@ -60,12 +64,13 @@ namespace ForkAndSpoon.Infrastructure.Repositories.Generic
         {
             try
             {
-                _dbSet.Update(entity);
-                await _context.SaveChangesAsync();
+                _dbSet.Update(entity); // Mark the entity as modified
+                await _context.SaveChangesAsync(); // Save changes to the database
                 return OperationResult<T>.Success(entity);
             }
             catch (Exception ex)
             {
+                // Handle unexpected errors
                 return OperationResult<T>.Failure($"Failed to update entity: {ex.Message}");
             }
         }
@@ -73,12 +78,13 @@ namespace ForkAndSpoon.Infrastructure.Repositories.Generic
         {
             try
             {
-                _dbSet.Remove(entity);
-                await _context.SaveChangesAsync();
+                _dbSet.Remove(entity); // Remove the entity from the DbSet
+                await _context.SaveChangesAsync(); // Save changes to the database
                 return OperationResult<bool>.Success(true);
             }
             catch (Exception ex)
             {
+                // Handle unexpected errors
                 return OperationResult<bool>.Failure($"Failed to delete entity: {ex.Message}");
             }
         }

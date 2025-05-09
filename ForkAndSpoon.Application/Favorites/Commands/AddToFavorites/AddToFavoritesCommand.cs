@@ -1,13 +1,14 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Favorites.Commands.AddToFavorites
 {
-    public class AddToFavoritesQuery : IRequest<bool>
+    public class AddToFavoritesCommand : IRequest<OperationResult<string>>
     {
         public int UserId { get; }
         public int RecipeId { get; }
 
-        public AddToFavoritesQuery(int userId, int recipeId) 
+        public AddToFavoritesCommand(int userId, int recipeId) 
         { 
             UserId = userId;
             RecipeId = recipeId;

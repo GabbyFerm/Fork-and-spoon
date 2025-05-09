@@ -1,4 +1,6 @@
-﻿namespace ForkAndSpoon.Application.Recipes.DTOs
+﻿using ForkAndSpoon.Application.Ingredients.DTOs;
+
+namespace ForkAndSpoon.Application.Recipes.DTOs
 {
     public class RecipeReadDto
     {
@@ -7,7 +9,7 @@
         public string Steps { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
         public string CategoryName { get; set; } = string.Empty;
-        public List<string> Ingredients { get; set; } = new();
+        public List<IngredientWithQuantityDto> Ingredients { get; set; } = new();
         public List<string> DietaryPreferences { get; set; } = new();
     }
 }

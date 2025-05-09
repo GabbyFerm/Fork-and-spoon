@@ -15,20 +15,31 @@ namespace ForkAndSpoon.Application.Categorys.Commands.DeleteCategory
 
         public async Task<OperationResult<bool>> Handle(DeleteCategoryCommand request, CancellationToken cancellationToken)
         {
-            var existingCategoryResult = await _categoryRepository.GetByIdAsync(request.CategoryID);
+            try
+            {
+                // Get category by ID
+                var existingCategoryResult = await _categoryRepository.GetByIdAsync(request.CategoryID);
 
-            if (!existingCategoryResult.IsSuccess || existingCategoryResult.Data == null)
-                return OperationResult<bool>.Failure("Category not found.");
+                if (!existingCategoryResult.IsSuccess || existingCategoryResult.Data == null)
+                    return OperationResult<bool>.Failure("Category not found.");
 
-            var categoryToDelete = existingCategoryResult.Data;
+                var categoryToDelete = existingCategoryResult.Data;
 
-            // Only allow deleting 'Uncategorized' if role is Admin
-            if (categoryToDelete.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase) && request.Role != "Admin")
-                return OperationResult<bool>.Failure("Only Admin can delete the 'Uncategorized' category.");
+                // Only allow admins to delete the 'Uncategorized' category
+                if (categoryToDelete.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase) &&
+                    request.Role != "Admin")
+                {
+                    return OperationResult<bool>.Failure("Only Admin can delete the 'Uncategorized' category.");
+                }
 
-            return await _categoryRepository.DeleteAsync(categoryToDelete);
+                // Proceed to delete
+                return await _categoryRepository.DeleteAsync(categoryToDelete);
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                return OperationResult<bool>.Failure($"Error deleting category: {ex.Message}");
+            }
         }
     }
-
-
 }

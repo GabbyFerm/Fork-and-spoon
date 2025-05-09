@@ -19,26 +19,40 @@ namespace ForkAndSpoon.Application.Categorys.Commands.UpdateCategory
 
         public async Task<OperationResult<CategoryDto>> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
         {
-            var categoryResult = await _categoryRepository.GetByIdAsync(request.CategoryID);
-            if (!categoryResult.IsSuccess || categoryResult.Data == null)
-                return OperationResult<CategoryDto>.Failure("Category not found.");
-
-            var category = categoryResult.Data;
-
-            // Restrictin access to renamin 'Uncategorized' to only admin
-            if (category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase)
-            && request.Role != "Admin")
+            try
             {
-                return OperationResult<CategoryDto>.Failure("Only admins can update the 'Uncategorized' category.");
+                // Load the existing category from DB
+                var categoryResult = await _categoryRepository.GetByIdAsync(request.CategoryID);
+
+                if (!categoryResult.IsSuccess || categoryResult.Data == null)
+                    return OperationResult<CategoryDto>.Failure("Category not found.");
+
+                var category = categoryResult.Data;
+
+                // Only allow admin to rename 'Uncategorized'
+                if (category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase) &&
+                    request.Role != "Admin")
+                {
+                    return OperationResult<CategoryDto>.Failure("Only admins can update the 'Uncategorized' category.");
+                }
+
+                // Apply the name update
+                category.Name = request.Name;
+
+                var updateResult = await _categoryRepository.UpdateAsync(category);
+
+                // If success, return mapped DTO
+                if (updateResult.IsSuccess && updateResult.Data != null)
+                    return OperationResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(updateResult.Data));
+
+                // Return failure result with error message if update failed
+                return OperationResult<CategoryDto>.Failure(updateResult.ErrorMessage!);
             }
-
-            category.Name = request.Name;
-
-            var updateResult = await _categoryRepository.UpdateAsync(category);
-            return updateResult.IsSuccess
-                ? OperationResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(updateResult.Data))
-            : OperationResult<CategoryDto>.Failure(updateResult.ErrorMessage!);
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                return OperationResult<CategoryDto>.Failure($"Error updating category: {ex.Message}");
+            }
         }
     }
-
 }

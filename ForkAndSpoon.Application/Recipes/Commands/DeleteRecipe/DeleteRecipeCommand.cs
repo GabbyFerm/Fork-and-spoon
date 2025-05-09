@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Recipes.Commands.DeleteRecipe
 {
-    public class DeleteRecipeCommand : IRequest<bool>
+    public class DeleteRecipeCommand : IRequest<OperationResult<bool>>
     {
         public int RecipeId { get; }
         public int UserId { get; }

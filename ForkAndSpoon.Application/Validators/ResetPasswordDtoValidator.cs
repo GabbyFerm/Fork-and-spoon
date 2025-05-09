@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using ForkAndSpoon.Application.Identity.DTOs;
+using ForkAndSpoon.Application.Authorize.DTOs;
 
 namespace ForkAndSpoon.Application.Validators
 {
@@ -7,11 +7,12 @@ namespace ForkAndSpoon.Application.Validators
     {
         public ResetPasswordDtoValidator()
         {
-            // this should be changed later (production setup) to use tokens and secure links instead of email
+            // Email is required for password reset (future: token instead)
             RuleFor(dto => dto.Email)
                 .NotEmpty().WithMessage("Email is required.")
                 .EmailAddress().WithMessage("A valid email is required.");
 
+            // New password must follow security requirements
             RuleFor(dto => dto.NewPassword)
                 .NotEmpty().WithMessage("New password is required.")
                 .MinimumLength(8).WithMessage("New password must be at least 8 characters long.")

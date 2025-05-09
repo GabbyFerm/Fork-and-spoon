@@ -1,9 +1,10 @@
 ﻿using ForkAndSpoon.Application.Recipes.DTOs;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Recipes.Commands.CreateRecipe
 {
-    public class CreateRecipeCommand : IRequest<RecipeReadDto>
+    public class CreateRecipeCommand : IRequest<OperationResult<RecipeReadDto>>
     {
         public RecipeCreateDto RecipeToCreate { get; }
         public int UserId { get; }
