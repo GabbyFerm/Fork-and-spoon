@@ -7,5 +7,7 @@
 
         public int IngredientID { get; set; }
         public Ingredient Ingredient { get; set; } = null!;
+
+        public string Quantity { get; set; } = string.Empty;
     }
 }

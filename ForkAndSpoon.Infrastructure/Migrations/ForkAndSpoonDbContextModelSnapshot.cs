@@ -181,6 +181,10 @@ namespace ForkAndSpoon.Infrastructure.Migrations
                     b.Property<int>("IngredientID")
                         .HasColumnType("int");
 
+                    b.Property<string>("Quantity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("RecipeID", "IngredientID");
 
                     b.HasIndex("IngredientID");

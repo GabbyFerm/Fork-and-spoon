@@ -6,9 +6,9 @@
         public int? UserID { get; set; }
         public int? RecipeID { get; set; }
 
-        public int Score { get; set; } // 1-5 scale
+        public int Score { get; set; } // 1 to 5 stars
 
-        // Navigation properties
+        // Navigation
         public User? User { get; set; }
         public Recipe? Recipe { get; set; }
     }

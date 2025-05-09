@@ -19,13 +19,26 @@ namespace ForkAndSpoon.Application.Categorys.Commands.CreateCategory
 
         public async Task<OperationResult<CategoryDto>> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
         {
-            var categoryToCreate = _mapper.Map<Category>(request.NewCategory);
+            try
+            {
+                // Map the input DTO to a Category entity
+                var categoryToCreate = _mapper.Map<Category>(request.NewCategory);
 
-            var result = await _categoryRepository.CreateAsync(categoryToCreate);
+                // Try saving to database
+                var result = await _categoryRepository.CreateAsync(categoryToCreate);
 
-            return result.IsSuccess
-            ? OperationResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(result.Data))
-            : OperationResult<CategoryDto>.Failure(result.ErrorMessage!);
+                // If successful, map to DTO and return success
+                if (result.IsSuccess && result.Data != null)
+                    return OperationResult<CategoryDto>.Success(_mapper.Map<CategoryDto>(result.Data));
+
+                // Otherwise return the error
+                return OperationResult<CategoryDto>.Failure(result.ErrorMessage!);
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                return OperationResult<CategoryDto>.Failure($"Error creating category: {ex.Message}");
+            }
         }
     }
 }

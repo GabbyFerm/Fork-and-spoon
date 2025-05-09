@@ -25,8 +25,12 @@ namespace ForkAndSpoon.API.Controllers
         {
             var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
-            var favorites = await _mediator.Send(new GetUserFavoritesQuery(userId));
-            return Ok(favorites);
+            var result = await _mediator.Send(new GetUserFavoritesQuery(userId));
+
+            if (!result.IsSuccess) 
+                return BadRequest(result);
+
+            return Ok(result);
         }
 
         [HttpPost("add-favorite/{recipeId}")]
@@ -34,19 +38,12 @@ namespace ForkAndSpoon.API.Controllers
         {
             var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
-            try
-            {
-                var added = await _mediator.Send(new AddToFavoritesQuery(userId, recipeId));
+            var result = await _mediator.Send(new AddToFavoritesCommand(userId, recipeId));
 
-                if (!added)
-                    return BadRequest("This recipe is already in your favorites.");
+            if (!result.IsSuccess) 
+                return BadRequest(result);
 
-                return Ok("Recipe added to favorites.");
-            }
-            catch (ArgumentException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            return Ok(result);
         }
 
         [HttpDelete("remove-favorite/{recipeId}")]
@@ -54,13 +51,12 @@ namespace ForkAndSpoon.API.Controllers
         {
             var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
-            var command = new RemoveFromFavoritesCommand(userId, recipeId);
-            var success = await _mediator.Send(command);
+            var result = await _mediator.Send(new RemoveFromFavoritesCommand(userId, recipeId));
 
-            if (!success)
-                return NotFound("Favorite not found.");
+            if (!result.IsSuccess)
+                return NotFound(result);
 
-            return Ok("Recipe removed from favorites.");
+            return Ok(result);
         }
     }
 }

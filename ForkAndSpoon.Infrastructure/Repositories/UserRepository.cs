@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.Application.Interfaces;
 using ForkAndSpoon.Domain.Models;
 using ForkAndSpoon.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
@@ -9,148 +8,109 @@ namespace ForkAndSpoon.Infrastructure.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly ForkAndSpoonDbContext _context;
-        private readonly IMapper _mapper;
 
-        public UserRepository(ForkAndSpoonDbContext context, IMapper mapper)
+        public UserRepository(ForkAndSpoonDbContext context)
         {
             _context = context;
-            _mapper = mapper;
         }
 
         public async Task<OperationResult<List<User>>> GetAllAsync()
         {
             try
             {
+                // Get all users from the database
                 var users = await _context.Users.ToListAsync();
+
+                // Return the list wrapped in a success result
                 return OperationResult<List<User>>.Success(users);
             }
             catch (Exception ex)
             {
-                return OperationResult<List<User>>.Failure($"Error fetching users: {ex.Message}");
+                // Handle unexpected errors
+                return OperationResult<List<User>>.Failure($"Error fetching users: {ex.Message}.");
             }
         }
 
-        public async Task<OperationResult<User>> GetByIdAsync(int userId)
+        public async Task<User?> GetUserByIdAsync(int userId)
+        {
+            // Fetch single user for updates
+            return await _context.Users.FindAsync(userId);
+        }
+
+        public async Task<User?> GetUserWithRelationsAsync(int userId)
+        {
+            // Load user along with related favorites and ratings
+            return await _context.Users
+                .Include(user => user.FavoriteRecipes)
+                .Include(user => user.Ratings)
+                .FirstOrDefaultAsync(user => user.UserID == userId);
+        }
+
+        public async Task<OperationResult<User>> GetByIdAsync(int id)
         {
             try
             {
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                    return OperationResult<User>.Failure("User not found");
+                // Attempt to find user by ID
+                var user = await _context.Users.FindAsync(id);
 
+                // Return failure if not found
+                if (user == null)
+                    return OperationResult<User>.Failure("User not found.");
+
+                // Otherwise return user in a success result
                 return OperationResult<User>.Success(user);
             }
             catch (Exception ex)
             {
-                return OperationResult<User>.Failure($"Error fetching user: {ex.Message}");
+                // Handle unexpected errors
+                return OperationResult<User>.Failure($"Error fetching user: {ex.Message}.");
             }
         }
 
-        public async Task<OperationResult<bool>> DeleteUserAsync(int userId)
+        public async Task<bool> UserNameExistsAsync(string newUserName, int excludeUserId)
+        {
+            // Check if the username already exists (excluding the current user)
+            return await _context.Users
+                .AnyAsync(user => user.UserName.ToLower() == newUserName.ToLower() && user.UserID != excludeUserId);
+        }
+
+        public async Task<bool> EmailExistsAsync(string newEmail)
+        {
+            // Check if the email is already in use
+            return await _context.Users
+                .AnyAsync(user => user.Email.ToLower() == newEmail.ToLower());
+        }
+
+        public void RemoveFavorites(IEnumerable<FavoriteRecipe> favorites)
+        {
+            // Remove all favorite entries
+            _context.FavoriteRecipes.RemoveRange(favorites);
+        }
+
+        public void RemoveRatings(IEnumerable<Rating> ratings)
+        {
+            // Remove all rating entries
+            _context.Ratings.RemoveRange(ratings);
+        }
+
+        public void RemoveUser(User user)
+        {
+            // Remove the user from the database
+            _context.Users.Remove(user);
+        }
+
+        public async Task<OperationResult<bool>> SaveChangesAsync()
         {
             try
             {
-                var user = await _context.Users
-                    .Include(user => user.FavoriteRecipes)
-                    .Include(user => user.Ratings)
-                    .FirstOrDefaultAsync(u => u.UserID == userId);
-
-                if (user == null)
-                    return OperationResult<bool>.Failure("User not found.");
-
-                // Remove related favorites
-                if (user.FavoriteRecipes.Any())
-                    _context.FavoriteRecipes.RemoveRange(user.FavoriteRecipes);
-
-                // Remove related ratings
-                if (user.Ratings.Any())
-                    _context.Ratings.RemoveRange(user.Ratings);
-
-                // Remove the user
-                _context.Users.Remove(user);
+                // Save all changes to the database
                 await _context.SaveChangesAsync();
-
                 return OperationResult<bool>.Success(true);
             }
             catch (Exception ex)
             {
-                return OperationResult<bool>.Failure($"Failed to delete user: {ex.Message}");
-            }
-        }
-
-        public async Task<OperationResult<bool>> UpdateEmailAsync(int userId, string newEmail)
-        {
-            try 
-            {
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                    return OperationResult<bool>.Failure("User not found.");
-
-                // Check if the new email already exists in the database
-                var emailExists = await _context.Users.AnyAsync(user => user.Email == newEmail);
-                if (emailExists)
-                    return OperationResult<bool>.Failure("Email is already registered.");
-
-                // Update the user's email
-                user.Email = newEmail;
-                await _context.SaveChangesAsync();
-
-                return OperationResult<bool>.Success(true);
-            }
-            catch (Exception ex)
-            {
-                return OperationResult<bool>.Failure($"Failed to update email: {ex.Message}");
-            }
-        }
-
-        public async Task<OperationResult<bool>> UpdatePasswordAsync(int userId, string currentPassword, string newPassword)
-        {
-            try 
-            {
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                    return OperationResult<bool>.Failure("User not found.");
-
-                // Verify the current password
-                var isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(currentPassword, user.Password);
-                if (!isCurrentPasswordValid)
-                    return OperationResult<bool>.Failure("Incorrect current password.");
-
-                // Hash the new password and update
-                user.Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
-                await _context.SaveChangesAsync();
-
-                return OperationResult<bool>.Success(true);
-            }
-            catch (Exception ex)
-            {
-                return OperationResult<bool>.Failure($"Failed to update password: {ex.Message}");
-            }
-        }
-
-        public async Task<OperationResult<bool>> UpdateUserNameAsync(int userId, string newUserName)
-        {
-            try 
-            {
-                var user = await _context.Users.FindAsync(userId);
-                if (user == null)
-                    return OperationResult<bool>.Failure("User not found.");
-
-                // Check if the new username already exists in the database
-                var userNameExists = await _context.Users.AnyAsync(user => user.UserName.ToLower() == newUserName.ToLower() && user.UserID != userId);
-
-                if (userNameExists)
-                    return OperationResult<bool>.Failure("Username is already taken.");
-
-                // Update the user's username
-                user.UserName = newUserName;
-                await _context.SaveChangesAsync();
-
-                return OperationResult<bool>.Success(true);
-            }
-            catch (Exception ex)
-            {
-                return OperationResult<bool>.Failure($"Failed to update username: {ex.Message}");
+                // Handle unexpected errors
+                return OperationResult<bool>.Failure($"Saving changes failed: {ex.Message}");
             }
         }
     }

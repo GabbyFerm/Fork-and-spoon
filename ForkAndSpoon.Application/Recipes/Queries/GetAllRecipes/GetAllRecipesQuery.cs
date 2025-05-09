@@ -1,9 +1,10 @@
 ﻿using ForkAndSpoon.Application.Recipes.DTOs;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Recipes.Queries.GetAllRecipes
 {
-    public class GetAllRecipesQuery : IRequest<List<RecipeReadDto>>
+    public class GetAllRecipesQuery : IRequest<OperationResult<List<RecipeReadDto>>>
     {
         public string? Category { get; set; }
         public string? Ingredient { get; set; }

@@ -1,9 +1,6 @@
-﻿using ForkAndSpoon.Application.Identity.Auth;
-using ForkAndSpoon.Application.Identity.DTOs;
-using ForkAndSpoon.Application.Interfaces;
+﻿using ForkAndSpoon.Application.Interfaces;
 using ForkAndSpoon.Domain.Models;
 using ForkAndSpoon.Infrastructure.Database;
-using ForkAndSpoon.Infrastructure.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace ForkAndSpoon.Application.Services
@@ -11,65 +8,43 @@ namespace ForkAndSpoon.Application.Services
     public class AuthRepository : IAuthRepository
     {
         private readonly ForkAndSpoonDbContext _context;
-        private readonly JWTGenerator _jwtGenerator;
 
-        public AuthRepository(ForkAndSpoonDbContext context, JWTGenerator jWTGenerator)
+        public AuthRepository(ForkAndSpoonDbContext context)
         {
             _context = context;
-            _jwtGenerator = jWTGenerator;
         }
 
-        public async Task<OperationResult<string>> LoginAsync(UserLoginDto loginDto) 
-        { 
-            var user = await _context.Users.FirstOrDefaultAsync(user => user.Email == loginDto.Email);
-
-            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password)) 
-            { 
-                return OperationResult<string>.Failure("Invalid credentials.");
-            }
-
-            var token = _jwtGenerator.JWTTokenGenerator(user);
-            return OperationResult<string>.Success(token);
-        }
-
-        public async Task<OperationResult<string>> RegisterAsync(UserRegisterDto userRegisterDto) 
-        { 
-            // Check if email exists in db
-            var emailExists = await _context.Users.AnyAsync(user  => user.Email == userRegisterDto.Email);
-            if (emailExists) 
-            {
-                return OperationResult<string>.Failure("Email is already registered.");
-            }
-            
-            // Hash password
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userRegisterDto.Password);
-
-            var newUser = new User
-            {
-                UserName = userRegisterDto.UserName,
-                Email = userRegisterDto.Email,
-                Password = hashedPassword,
-                Role = "User" // Default role
-            };
-
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
-
-            var token = _jwtGenerator.JWTTokenGenerator(newUser);
-            return OperationResult<string>.Success(token);
-        }
-        public async Task<OperationResult<bool>> ResetPasswordAsync(ResetPasswordDto resetDto)
+        // Get a user by email (used in login or password reset)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(user => user.Email == resetDto.Email);
-            if (user == null) 
+            return await _context.Users.FirstOrDefaultAsync(user => user.Email.ToLower() == email.ToLower());
+        }
+
+        // Check if an email is already registered
+        public async Task<bool> EmailExistsAsync(string email)
+        {
+            return await _context.Users.AnyAsync(user => user.Email.ToLower() == email.ToLower());
+        }
+
+        // Add a new user to the database (save is called separately)
+        public async Task CreateUserAsync(User user)
+        {
+            await _context.Users.AddAsync(user);
+        }
+
+        // Save changes to the database
+        public async Task<OperationResult<bool>> SaveChangesAsync()
+        {
+            try
             {
-                return OperationResult<bool>.Failure("No user found with that email.");
+                await _context.SaveChangesAsync();
+                return OperationResult<bool>.Success(true);
             }
-
-            user.Password = BCrypt.Net.BCrypt.HashPassword(resetDto.NewPassword);
-            await _context.SaveChangesAsync();
-
-            return OperationResult<bool>.Success(true);
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                return OperationResult<bool>.Failure($"Saving changes failed: {ex.Message}");
+            }
         }
     }
 }

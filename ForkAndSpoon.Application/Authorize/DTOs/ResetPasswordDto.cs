@@ -1,4 +1,4 @@
-﻿namespace ForkAndSpoon.Application.Identity.DTOs
+﻿namespace ForkAndSpoon.Application.Authorize.DTOs
 {
     public class ResetPasswordDto
     {

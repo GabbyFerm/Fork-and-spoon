@@ -1,5 +1,6 @@
 ﻿using ForkAndSpoon.API.Helpers;
-using ForkAndSpoon.Application.Interfaces;
+using ForkAndSpoon.Application.Categorys.Commands.CreateCategory;
+using ForkAndSpoon.Application.Categorys.DTOs;
 using ForkAndSpoon.Application.Recipes.Commands.CreateRecipe;
 using ForkAndSpoon.Application.Recipes.Commands.DeleteRecipe;
 using ForkAndSpoon.Application.Recipes.Commands.RestoreDeletedRecipe;
@@ -10,10 +11,10 @@ using ForkAndSpoon.Application.Recipes.Queries.GetAllRecipes;
 using ForkAndSpoon.Application.Recipes.Queries.GetDeletedRecipeById;
 using ForkAndSpoon.Application.Recipes.Queries.GetDeletedRecipes;
 using ForkAndSpoon.Application.Recipes.Queries.GetRecipeById;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -27,7 +28,7 @@ public class RecipeController : ControllerBase
     }
 
     [HttpGet("get-recipes")]
-    public async Task<ActionResult<List<RecipeReadDto>>> GetAllRecipes(
+    public async Task<IActionResult> GetAllRecipes(
     [FromQuery] string? category,
     [FromQuery] string? ingredient,
     [FromQuery] string? dietary,
@@ -35,37 +36,38 @@ public class RecipeController : ControllerBase
     [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
     {
-        var query = new GetAllRecipesQuery(category, ingredient, dietary, sortOrder, page, pageSize);
-        var recipes = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetAllRecipesQuery(category, ingredient, dietary, sortOrder, page, pageSize));
 
-        if (recipes == null || recipes.Count == 0)
-            return NotFound("No recipes found with the given filters.");
+        if (!result.IsSuccess)
+            return NotFound(result.ErrorMessage);
 
-        return Ok(recipes);
+        return Ok(result);
     }
 
     [HttpGet("get-recipe/{id}")]
-    public async Task<ActionResult<RecipeReadDto>> GetRecipeById(int id)
+    public async Task<IActionResult> GetRecipeById(int id)
     {
-        var recipe = await _mediator.Send(new GetRecipeByIdQuery(id));
+        var result = await _mediator.Send(new GetRecipeByIdQuery(id));
 
-        if (recipe == null)
-            return NotFound("Recipe not found.");
+        if (!result.IsSuccess)
+            return NotFound(result.ErrorMessage);
 
-        return Ok(recipe);
+        return Ok(result);
     }
 
     [Authorize]
     [HttpPost("create-recipe")]
-    public async Task<ActionResult<RecipeReadDto>> CreateRecipe([FromBody] RecipeCreateDto recipeToCreate)
+    public async Task<IActionResult> CreateRecipe([FromBody] RecipeCreateDto recipeToCreate)
     {
         var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
         var command = new CreateRecipeCommand(recipeToCreate, userId);
+        var result = await _mediator.Send(command);
 
-        var createdRecipe = await _mediator.Send(command);
+        if (!result.IsSuccess)
+            return BadRequest(result.ErrorMessage);
 
-        return CreatedAtAction(nameof(GetRecipeById), new { id = createdRecipe.RecipeID }, createdRecipe);
+        return CreatedAtAction(nameof(GetRecipeById), new { id = result.Data!.RecipeID }, result);
     }
 
     [Authorize]
@@ -73,34 +75,33 @@ public class RecipeController : ControllerBase
     public async Task<IActionResult> UpdateRecipe(int id, [FromBody] RecipeUpdateDto updatedRecipe)
     {
         var userId = ClaimsHelper.GetUserIdFromClaims(User);
-        var role = ClaimsHelper.GetUserRoleFromClaims(User);
+        var userRole = ClaimsHelper.GetUserRoleFromClaims(User);
 
-        var command = new UpdateRecipeCommand(id, updatedRecipe, userId, role);
-        var recipe = await _mediator.Send(command);
+        var command = new UpdateRecipeCommand(id, updatedRecipe, userId, userRole);
+        var result = await _mediator.Send(command);
 
-        if (recipe == null)
-            return NotFound("Recipe not found, deleted, or not editable by this user.");
+        if (!result.IsSuccess)
+            return NotFound(result.ErrorMessage);
 
-        return Ok(recipe);
+        return Ok(result);
     }
 
     [Authorize]
     [HttpPatch("update-dietary-preferences/{id}")]
     public async Task<IActionResult> PatchDietaryPreferences(int id, [FromBody] RecipeDietaryPreferenceUpdateDto updateDto)
     {
-        var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
         if (updateDto.DietaryPreferences == null || !updateDto.DietaryPreferences.Any())
             return BadRequest("Dietary preferences cannot be empty.");
 
-        var command = new UpdateDietaryPreferencesCommand(id, userId, updateDto);
+        var userId = ClaimsHelper.GetUserIdFromClaims(User);
 
-        var updatedRecipe = await _mediator.Send(command);
+        var result = await _mediator.Send(new UpdateDietaryPreferencesCommand(id, userId, updateDto));
 
-        if (updatedRecipe == null)
-            return NotFound("Recipe not found or not owned by user.");
+        if (!result.IsSuccess)
+            return NotFound(result.ErrorMessage);
 
-        return Ok(updatedRecipe);
+        return Ok(result);
     }
 
     [Authorize]
@@ -108,14 +109,12 @@ public class RecipeController : ControllerBase
     public async Task<IActionResult> DeleteRecipe(int id)
     {
         var userId = ClaimsHelper.GetUserIdFromClaims(User);
-        var role = ClaimsHelper.GetUserRoleFromClaims(User);
+        var userRole = ClaimsHelper.GetUserRoleFromClaims(User);
 
-        var command = new DeleteRecipeCommand(id, userId, role);
+        var result = await _mediator.Send(new DeleteRecipeCommand(id, userId, userRole));
 
-        var isDeleted = await _mediator.Send(command);
-
-        if (!isDeleted)
-            return NotFound("Recipe not found or not owned by user.");
+        if (!result.IsSuccess)
+            return NotFound(result.ErrorMessage);
 
         return NoContent();
     }
@@ -124,21 +123,24 @@ public class RecipeController : ControllerBase
     [HttpGet("admin/deleted-recipes")]
     public async Task<IActionResult> GetDeletedRecipes()
     {
-        var deletedRecipes = await _mediator.Send(new GetDeletedRecipesQuery());
+        var result = await _mediator.Send(new GetDeletedRecipesQuery());
 
-        return Ok(deletedRecipes);
+        if (!result.IsSuccess)
+            return NotFound(result.ErrorMessage);
+
+        return Ok(result);
     }
 
     [Authorize(Roles = "Admin")]
     [HttpGet("admin/deleted-recipes/{id}")]
     public async Task<IActionResult> GetDeletedRecipe(int id)
     {
-        var recipe = await _mediator.Send(new GetDeletedRecipeByIdQuery(id));
+        var result = await _mediator.Send(new GetDeletedRecipeByIdQuery(id));
 
-        if (recipe == null) 
-            return NotFound("Deleted recipe not found.");
+        if (!result.IsSuccess)
+            return NotFound(result.ErrorMessage);
 
-        return Ok(recipe);
+        return Ok(result);
     }
 
     [Authorize(Roles = "Admin")]
@@ -147,8 +149,8 @@ public class RecipeController : ControllerBase
     {
         var result = await _mediator.Send(new RestoreDeletedRecipeCommand(id));
 
-        if (!result) 
-            return NotFound("Recipe not found or not deleted.");
+        if (!result.IsSuccess) 
+            return NotFound(result.ErrorMessage);
 
         return Ok("Recipe successfully restored.");
     }

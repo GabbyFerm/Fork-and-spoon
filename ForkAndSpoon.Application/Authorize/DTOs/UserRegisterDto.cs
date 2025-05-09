@@ -1,4 +1,4 @@
-﻿namespace ForkAndSpoon.Application.Identity.Auth
+﻿namespace ForkAndSpoon.Application.Authorize.DTOs
 {
     public class UserRegisterDto
     {

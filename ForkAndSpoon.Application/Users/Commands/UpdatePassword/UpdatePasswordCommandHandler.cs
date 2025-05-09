@@ -15,11 +15,22 @@ namespace ForkAndSpoon.Application.Users.Commands.UpdatePassword
 
         public async Task<OperationResult<bool>> Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
         {
-            return await _userRepository.UpdatePasswordAsync(
-                request.UserId,
-                request.CurrentPassword,
-                request.NewPassword
-            );
+            // Fetch user by ID
+            var user = await _userRepository.GetUserByIdAsync(request.UserId);
+            if (user == null)
+                return OperationResult<bool>.Failure("User not found.");
+
+            // Validate current password
+            var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.Password);
+            if (!isPasswordValid)
+                return OperationResult<bool>.Failure("Incorrect current password.");
+
+            // Update password and save
+            user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _userRepository.SaveChangesAsync();
+
+            // Return success
+            return OperationResult<bool>.Success(true);
         }
     }
 }

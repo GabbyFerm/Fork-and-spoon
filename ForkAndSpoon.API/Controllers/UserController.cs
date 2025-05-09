@@ -31,6 +31,9 @@ namespace ForkAndSpoon.API.Controllers
         {
             var result = await _mediator.Send(new GetAllUsersQuery());
 
+            if (!result.IsSuccess)
+                return NotFound(result.ErrorMessage ?? "No users found.");
+
             return Ok(result);
         }
 
@@ -60,6 +63,7 @@ namespace ForkAndSpoon.API.Controllers
             return Ok(user);
         }
 
+        [Authorize]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
@@ -70,7 +74,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new DeleteUserCommand(id, callerId, callerRole));
 
             if (!result.IsSuccess)
-                return BadRequest(result); // User not allowed to delete someone else
+                return BadRequest(result.ErrorMessage); // User not allowed to delete someone else
 
             return NoContent();
         }

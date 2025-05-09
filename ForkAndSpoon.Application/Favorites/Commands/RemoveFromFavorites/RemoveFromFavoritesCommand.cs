@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using ForkAndSpoon.Domain.Models;
+using MediatR;
 
 namespace ForkAndSpoon.Application.Favorites.Commands.RemoveFromFavorites
 {
-    public class RemoveFromFavoritesCommand : IRequest<bool>
+    public class RemoveFromFavoritesCommand : IRequest<OperationResult<string>>
     {
         public int UserId { get; }
         public int RecipeId { get; }

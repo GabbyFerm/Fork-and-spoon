@@ -1,9 +1,10 @@
 ﻿using ForkAndSpoon.Application.Recipes.DTOs;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Recipes.Commands.UpdateDietaryPreferences
 {
-    public class UpdateDietaryPreferencesCommand : IRequest<RecipeReadDto?>
+    public class UpdateDietaryPreferencesCommand : IRequest<OperationResult<RecipeReadDto>>
     {
         public int RecipeId { get; }
         public int UserId { get; }

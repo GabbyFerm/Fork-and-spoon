@@ -24,9 +24,9 @@ namespace ForkAndSpoon.Application.Users.Queries.GetAllUsers
             if (!result.IsSuccess)
                 return OperationResult<List<UserDto>>.Failure(result.ErrorMessage ?? "No users found.");
 
-            var usersDtos = _mapper.Map<List<UserDto>>(result.Data);
+            var userDtos = _mapper.Map<List<UserDto>>(result.Data);
 
-            return OperationResult<List<UserDto>>.Success(usersDtos);
+            return OperationResult<List<UserDto>>.Success(userDtos);
         }
     }
 }

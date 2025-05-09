@@ -5,7 +5,7 @@
         public int CategoryID { get; set; }
         public required string Name { get; set; }
 
-        // Navigation Property
+        // Recipes in this category (1-to-many)
         public ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
     }
 }

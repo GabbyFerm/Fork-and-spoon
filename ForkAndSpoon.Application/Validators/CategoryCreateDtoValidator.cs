@@ -7,6 +7,7 @@ namespace ForkAndSpoon.Application.Validators
     {
         public CategoryCreateDtoValidator()
         {
+            // Name is required and has a max length
             RuleFor(category => category.Name)
                 .NotEmpty()
                 .MaximumLength(50)

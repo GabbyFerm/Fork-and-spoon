@@ -1,7 +1,7 @@
 ﻿using ForkAndSpoon.Domain.Models;
 using MediatR;
 
-namespace ForkAndSpoon.Application.Identity.Commands
+namespace ForkAndSpoon.Application.Authorize.Commands.ResetPassword
 {
     public class ResetPasswordCommand : IRequest<OperationResult<bool>>
     {
