@@ -39,7 +39,7 @@ namespace ForkAndSpoon.Application.Users.Commands.DeleteUser
             // Commit changes to database
             await _userRepository.SaveChangesAsync();
 
-            // Return success
+            // Return success result
             return OperationResult<bool>.Success(true);
         }
     }

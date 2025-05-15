@@ -19,13 +19,17 @@ namespace ForkAndSpoon.Application.Users.Queries.GetAllUsers
 
         public async Task<OperationResult<List<UserDto>>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
         {
+            // Fetch all users from the database
             var result = await _userRepository.GetAllAsync();
 
+            // If fetching failed, return failure result
             if (!result.IsSuccess)
                 return OperationResult<List<UserDto>>.Failure(result.ErrorMessage ?? "No users found.");
 
+            // Map the users to DTOs
             var userDtos = _mapper.Map<List<UserDto>>(result.Data);
 
+            // Return success with the mapped list
             return OperationResult<List<UserDto>>.Success(userDtos);
         }
     }

@@ -14,7 +14,13 @@ namespace ForkAndSpoon.Application.Services
             _context = context;
         }
 
-        // Get a user by email (used in login or password reset)
+        // Get a user by username (used in login)
+        public async Task<User?> GetUserByUsernameAsync(string username)
+        {
+            return await _context.Users.FirstOrDefaultAsync(user => user.UserName.ToLower() == username.ToLower());
+        }
+
+        // Get a user by email (used in password reset)
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             return await _context.Users.FirstOrDefaultAsync(user => user.Email.ToLower() == email.ToLower());

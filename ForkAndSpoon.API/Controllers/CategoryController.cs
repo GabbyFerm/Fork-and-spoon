@@ -28,7 +28,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new GetAllCategoriesQuery());
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
             return Ok(result);
         }
@@ -39,7 +39,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new GetCategoryByIdQuery(id));
 
             if (!result.IsSuccess)
-                return NotFound(result.ErrorMessage);
+                return NotFound(result);
 
             return Ok(result);
         }
@@ -51,7 +51,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new CreateCategoryCommand(newCategory));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
             return CreatedAtAction(nameof(GetCategoryById), new { id = result.Data!.CategoryID }, result);
         }
@@ -65,7 +65,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new UpdateCategoryCommand(id, updateDto.Name, role));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
             return Ok(result);
         }
@@ -79,9 +79,9 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new DeleteCategoryCommand(id, role));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
-            return NoContent();
+            return Ok(result);
         }
     }
 }

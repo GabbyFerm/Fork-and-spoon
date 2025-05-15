@@ -20,16 +20,16 @@ namespace ForkAndSpoon.Application.Users.Commands.UpdateEmail
             if (user == null)
                 return OperationResult<bool>.Failure("User not found.");
 
-            // Check for email duplication
+            // Check if new email already exists
             var emailExists = await _userRepository.EmailExistsAsync(request.NewEmail);
             if (emailExists)
                 return OperationResult<bool>.Failure("Email is already registered.");
 
-            // Update email and save
+            // Update user's email and save
             user.Email = request.NewEmail;
             await _userRepository.SaveChangesAsync();
 
-            // Return success
+            // Return success result
             return OperationResult<bool>.Success(true);
         }
     }

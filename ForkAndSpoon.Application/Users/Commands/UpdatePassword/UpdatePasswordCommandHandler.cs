@@ -25,11 +25,11 @@ namespace ForkAndSpoon.Application.Users.Commands.UpdatePassword
             if (!isPasswordValid)
                 return OperationResult<bool>.Failure("Incorrect current password.");
 
-            // Update password and save
+            // Update password with hashed new password
             user.Password = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
             await _userRepository.SaveChangesAsync();
 
-            // Return success
+            // Return success result
             return OperationResult<bool>.Success(true);
         }
     }
