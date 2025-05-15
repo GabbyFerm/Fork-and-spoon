@@ -19,7 +19,7 @@ namespace ForkAndSpoon.Application.Authorize.Commands.ResetPassword
                 // Look up the user by their email
                 var user = await _authRepository.GetUserByEmailAsync(request.Email);
 
-                // If not found return an error message
+                // If user is not found, return an error message
                 if (user == null)
                     return OperationResult<bool>.Failure("No user found with that email.");
 

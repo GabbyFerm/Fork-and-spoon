@@ -27,7 +27,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new GetAllIngredientsQuery());
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
             return Ok(result);
         }
@@ -38,7 +38,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new GetIngredientByIdQuery(ingredientId));
 
             if (!result.IsSuccess)
-                return NotFound(result.ErrorMessage);
+                return NotFound(result);
 
             return Ok(result);
         }
@@ -49,7 +49,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new GetIngredientByNameQuery(name));
 
             if (!result.IsSuccess)
-                return NotFound(result.ErrorMessage);
+                return NotFound(result);
 
             return Ok(result);
         }
@@ -61,7 +61,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(command);
 
             if (!result.IsSuccess || result.Data == null)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
             return CreatedAtAction(nameof(GetIngredientById), new { ingredientId = result.Data.IngredientID }, result);
         }
@@ -73,7 +73,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new UpdateIngredientCommand(ingredientId, updatedName));
 
             if (!result.IsSuccess)
-                return NotFound(result.ErrorMessage);
+                return NotFound(result);
 
             return Ok(result);
         }
@@ -85,9 +85,9 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new DeleteIngredientCommand(ingredientId));
 
             if (!result.IsSuccess)
-                return NotFound(result.ErrorMessage);
+                return NotFound(result);
 
-            return NoContent();
+            return Ok(result);
         }
     }
 }

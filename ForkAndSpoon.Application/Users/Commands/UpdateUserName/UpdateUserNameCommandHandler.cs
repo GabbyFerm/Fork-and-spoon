@@ -20,7 +20,7 @@ namespace ForkAndSpoon.Application.Users.Commands.UpdateUserName
             if (user == null)
                 return OperationResult<bool>.Failure("User not found.");
 
-            // Check for username conflict
+            // Check if username already exists (excluding current user)
             var userNameTaken = await _userRepository.UserNameExistsAsync(request.NewUserName, request.UserId);
             if (userNameTaken)
                 return OperationResult<bool>.Failure("Username is already taken.");
@@ -29,7 +29,7 @@ namespace ForkAndSpoon.Application.Users.Commands.UpdateUserName
             user.UserName = request.NewUserName;
             await _userRepository.SaveChangesAsync();
 
-            // Return success
+            // Return success result
             return OperationResult<bool>.Success(true);
         }
     }

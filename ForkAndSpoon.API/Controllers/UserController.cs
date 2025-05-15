@@ -7,6 +7,7 @@ using ForkAndSpoon.Application.Users.DTOs;
 using ForkAndSpoon.Application.Users.Queries.GetAllUsers;
 using ForkAndSpoon.Application.Users.Queries.GetLoggedInUser;
 using ForkAndSpoon.Application.Users.Queries.GetUserById;
+using ForkAndSpoon.Domain.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,7 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new GetAllUsersQuery());
 
             if (!result.IsSuccess)
-                return NotFound(result.ErrorMessage ?? "No users found.");
+                return NotFound(result);
 
             return Ok(result);
         }
@@ -44,23 +45,26 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(new GetUserByIdQuery(id));
 
             if (!result.IsSuccess)
-                return NotFound("User not found.");
+                return NotFound(result);
 
             return Ok(result);
         }
 
         [Authorize]
-        [HttpGet("get-me")] // Logged in result
+        [HttpGet("get-me")] 
         public async Task<IActionResult> GetLoggedInUser()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
-                return Unauthorized("Unable to identify the result from token.");
+            {
+                var errorResult = OperationResult<UserDto>.Failure("Unable to identify the result from token.");
+                return Unauthorized(errorResult);
+            }
 
             int userId = int.Parse(userIdClaim.Value);
-            var user = await _mediator.Send(new GetLoggedInUserQuery(userId));
+            var result = await _mediator.Send(new GetLoggedInUserQuery(userId));
 
-            return Ok(user);
+            return Ok(result);
         }
 
         [Authorize]
@@ -68,15 +72,14 @@ namespace ForkAndSpoon.API.Controllers
         public async Task<IActionResult> DeleteUser(int id)
         {
             var callerId = ClaimsHelper.GetUserIdFromClaims(User);
-
-            string callerRole = ClaimsHelper.GetUserRoleFromClaims(User);
+            var callerRole = ClaimsHelper.GetUserRoleFromClaims(User);
 
             var result = await _mediator.Send(new DeleteUserCommand(id, callerId, callerRole));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage); // User not allowed to delete someone else
+                return BadRequest(result); 
 
-            return NoContent();
+            return Ok(result);
         }
 
         [Authorize]
@@ -84,14 +87,12 @@ namespace ForkAndSpoon.API.Controllers
         public async Task<IActionResult> UpdateEmail([FromBody] UpdateEmailDto updateDto)
         {
             var userId = ClaimsHelper.GetUserIdFromClaims(User);
-
-            var command = new UpdateEmailCommand(userId, updateDto.Email);
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(new UpdateEmailCommand(userId, updateDto.Email));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
-            return NoContent();
+            return Ok(result);
         }
 
         [Authorize]
@@ -99,14 +100,12 @@ namespace ForkAndSpoon.API.Controllers
         public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDto updateDto)
         {
             var userId = ClaimsHelper.GetUserIdFromClaims(User);
-
-            var command = new UpdatePasswordCommand(userId, updateDto.CurrentPassword, updateDto.NewPassword);
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(new UpdatePasswordCommand(userId, updateDto.CurrentPassword, updateDto.NewPassword));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
-            return NoContent();
+            return Ok(result);
         }
 
         [Authorize]
@@ -114,14 +113,12 @@ namespace ForkAndSpoon.API.Controllers
         public async Task<IActionResult> UpdateUserName([FromBody] UpdateUserNameDto updateDto)
         {
             var userId = ClaimsHelper.GetUserIdFromClaims(User);
-
-            var command = new UpdateUserNameCommand(userId, updateDto.UserName);
-            var result = await _mediator.Send(command);
+            var result = await _mediator.Send(new UpdateUserNameCommand(userId, updateDto.UserName));
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
-            return NoContent();
+            return Ok(result);
         }
     }
 }

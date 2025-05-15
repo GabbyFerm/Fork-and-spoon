@@ -1,6 +1,4 @@
 ﻿using ForkAndSpoon.API.Helpers;
-using ForkAndSpoon.Application.Categorys.Commands.CreateCategory;
-using ForkAndSpoon.Application.Categorys.DTOs;
 using ForkAndSpoon.Application.Recipes.Commands.CreateRecipe;
 using ForkAndSpoon.Application.Recipes.Commands.DeleteRecipe;
 using ForkAndSpoon.Application.Recipes.Commands.RestoreDeletedRecipe;
@@ -11,7 +9,6 @@ using ForkAndSpoon.Application.Recipes.Queries.GetAllRecipes;
 using ForkAndSpoon.Application.Recipes.Queries.GetDeletedRecipeById;
 using ForkAndSpoon.Application.Recipes.Queries.GetDeletedRecipes;
 using ForkAndSpoon.Application.Recipes.Queries.GetRecipeById;
-using ForkAndSpoon.Domain.Models;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,7 +36,7 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(new GetAllRecipesQuery(category, ingredient, dietary, sortOrder, page, pageSize));
 
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
         return Ok(result);
     }
@@ -50,7 +47,7 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(new GetRecipeByIdQuery(id));
 
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
         return Ok(result);
     }
@@ -65,7 +62,7 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(command);
 
         if (!result.IsSuccess)
-            return BadRequest(result.ErrorMessage);
+            return BadRequest(result);
 
         return CreatedAtAction(nameof(GetRecipeById), new { id = result.Data!.RecipeID }, result);
     }
@@ -81,7 +78,7 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(command);
 
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
         return Ok(result);
     }
@@ -99,7 +96,7 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(new UpdateDietaryPreferencesCommand(id, userId, updateDto));
 
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
         return Ok(result);
     }
@@ -114,9 +111,9 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(new DeleteRecipeCommand(id, userId, userRole));
 
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
-        return NoContent();
+        return Ok(result);
     }
 
     [Authorize(Roles = "Admin")]
@@ -126,7 +123,7 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(new GetDeletedRecipesQuery());
 
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
         return Ok(result);
     }
@@ -138,7 +135,7 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(new GetDeletedRecipeByIdQuery(id));
 
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
         return Ok(result);
     }
@@ -150,8 +147,8 @@ public class RecipeController : ControllerBase
         var result = await _mediator.Send(new RestoreDeletedRecipeCommand(id));
 
         if (!result.IsSuccess) 
-            return NotFound(result.ErrorMessage);
+            return NotFound(result);
 
-        return Ok("Recipe successfully restored.");
+        return Ok(result);
     }
 }

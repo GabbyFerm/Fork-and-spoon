@@ -19,14 +19,18 @@ namespace ForkAndSpoon.Application.Users.Queries.GetUserById
 
         public async Task<OperationResult<UserDto>> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
+            // Fetch the user by ID
             var result = await _userRepository.GetByIdAsync(request.UserId);
 
+            // If user not found or failed to load, return failure
             if (!result.IsSuccess || result.Data == null)
                 return OperationResult<UserDto>.Failure(result.ErrorMessage ?? "User not found.");
 
+            // Map user to DTO
             var userDto = _mapper.Map<UserDto>(result.Data);
 
-            return OperationResult<UserDto>.Success(userDto); 
+            // Return success with the mapped user
+            return OperationResult<UserDto>.Success(userDto);
         }
     }
 }

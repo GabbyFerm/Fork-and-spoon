@@ -20,7 +20,7 @@ namespace ForkAndSpoon.Application.Authorize.Queries
             try 
             {
                 // Look up the user by email
-                var user = await _authRepository.GetUserByEmailAsync(request.Email);
+                var user = await _authRepository.GetUserByUsernameAsync(request.UserName);
 
                 // Validate password
                 if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))

@@ -19,15 +19,15 @@ namespace ForkAndSpoon.Application.Ingredients.Queries.GetAllIngredients
 
         public async Task<OperationResult<List<IngredientReadDto>>> Handle(GetAllIngredientsQuery request, CancellationToken cancellationToken)
         {
-            // Fetch all ingredients from the database
+            // Fetch the result from the repository
             var result = await _ingredientRepository.GetAllAsync();
 
-            // If the fetch failed, return an error
-            if (!result.IsSuccess)
+            // If the fetch failed, return failure with message
+            if (!result.IsSuccess || result.Data == null)
                 return OperationResult<List<IngredientReadDto>>.Failure(result.ErrorMessage!);
 
-            // Map the list of entities to DTOs
-            var dtoList = _autoMapper.Map<List<IngredientReadDto>>(result);
+            // Map the List<Ingredient>
+            var dtoList = _autoMapper.Map<List<IngredientReadDto>>(result.Data);
 
             // Return the list of DTOs as a success result
             return OperationResult<List<IngredientReadDto>>.Success(dtoList);

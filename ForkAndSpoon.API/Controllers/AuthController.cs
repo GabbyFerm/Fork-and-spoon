@@ -27,20 +27,20 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(command);
 
             if (!result.IsSuccess)
-                return BadRequest(result.ErrorMessage);
+                return BadRequest(result);
 
             return Ok(result);
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login(UserLoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] UserLoginDto loginDto)
         {
-            var query = new LoginQuery(loginDto.Email, loginDto.Password);
+            var query = new LoginQuery(loginDto.UserName, loginDto.Password);
             var result = await _mediator.Send(query);
 
             if (!result.IsSuccess)
-                return Unauthorized(result.ErrorMessage);
+                return Unauthorized(result);
 
             return Ok(result);
         }
@@ -54,9 +54,9 @@ namespace ForkAndSpoon.API.Controllers
             var result = await _mediator.Send(command);
 
             if (!result.IsSuccess)
-                return NotFound(result.ErrorMessage);
+                return NotFound(result);
 
-            return NoContent(); // 204 response if success and nothing to return
+            return Ok(result); 
         }
     }
 }

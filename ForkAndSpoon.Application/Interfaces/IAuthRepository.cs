@@ -4,7 +4,10 @@ namespace ForkAndSpoon.Application.Interfaces
 {
     public interface IAuthRepository
     {
-        // Retrieves a user by their email address.
+        // Retrieves a user by their username.
+        Task<User?> GetUserByUsernameAsync(string username);
+
+        // Retrieves a user by their email.
         Task<User?> GetUserByEmailAsync(string email);
 
         // Checks if an email is already registered in the system.
