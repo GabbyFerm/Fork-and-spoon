@@ -26,10 +26,9 @@ namespace ForkAndSpoon.Application.Categorys.Commands.DeleteCategory
                 var categoryToDelete = existingCategoryResult.Data;
 
                 // Only allow admins to delete the 'Uncategorized' category
-                if (categoryToDelete.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase) &&
-                    request.Role != "Admin")
+                if (categoryToDelete.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase))
                 {
-                    return OperationResult<bool>.Failure("Only Admin can delete the 'Uncategorized' category.");
+                    return OperationResult<bool>.Failure("Default category cannot be deleted.");
                 }
 
                 // Proceed to delete

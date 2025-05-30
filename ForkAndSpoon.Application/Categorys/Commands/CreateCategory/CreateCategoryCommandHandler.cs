@@ -21,6 +21,15 @@ namespace ForkAndSpoon.Application.Categorys.Commands.CreateCategory
         {
             try
             {
+                var nameToCheck = request.NewCategory.Name.Trim().ToLower();
+
+                // Check if a category with the same name already exists (case-insensitive)
+                bool nameExists = await _categoryRepository
+                    .ExistsAsync(category => category.Name.ToLower() == nameToCheck);
+
+                if (nameExists)
+                    return OperationResult<CategoryDto>.Failure("A category with this name already exists.");
+
                 // Map the input DTO to a Category entity
                 var categoryToCreate = _mapper.Map<Category>(request.NewCategory);
 

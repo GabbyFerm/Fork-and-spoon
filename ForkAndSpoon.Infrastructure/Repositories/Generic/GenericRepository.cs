@@ -2,6 +2,7 @@
 using ForkAndSpoon.Domain.Models;
 using ForkAndSpoon.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace ForkAndSpoon.Infrastructure.Repositories.Generic
 {
@@ -87,6 +88,11 @@ namespace ForkAndSpoon.Infrastructure.Repositories.Generic
                 // Handle unexpected errors
                 return OperationResult<bool>.Failure($"Failed to delete entity: {ex.Message}");
             }
+        }
+
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().AnyAsync(predicate);
         }
     }
 }

@@ -1,32 +1,29 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Recipes.DTOs;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Recipes.Validators
 {
     public class RecipeCreateDtoValidator : AbstractValidator<RecipeCreateDto>
     {
         public RecipeCreateDtoValidator()
         {
-            // Title is required and max 100 characters
             RuleFor(recipe => recipe.Title)
-                .NotEmpty()
-                .MaximumLength(100);
+                .NotEmpty().WithMessage("Title is required.")
+                .MaximumLength(100).WithMessage("Title must be at most 100 characters.");
 
-            // Steps are required
             RuleFor(recipe => recipe.Steps)
-                .NotEmpty();
+                .NotEmpty().WithMessage("Steps are required.");
 
-            // Category must be selected
             RuleFor(recipe => recipe.CategoryID)
-                .GreaterThan(0)
-                .WithMessage("Please select a valid category.");
+                .NotNull().WithMessage("A valid category must be selected.")
+                .GreaterThan(0).WithMessage("Category ID must be greater than 0.");
 
-            // At least one ingredient is required
-            RuleFor(recipe => recipe.Ingredients)
-                .NotEmpty()
-                .WithMessage("At least one ingredient is required.");
+            RuleFor(recipe => recipe.DietaryPreferences)
+                .NotNull().WithMessage("Dietary preferences are required.");
 
-            // Validate each ingredient
+            RuleForEach(recipe => recipe.DietaryPreferences)
+                .NotEmpty().WithMessage("Each dietary preference must not be empty.");
+
             RuleForEach(recipe => recipe.Ingredients).ChildRules(ingredient =>
             {
                 ingredient.RuleFor(i => i.Name)
@@ -35,10 +32,6 @@ namespace ForkAndSpoon.Application.Validators
                 ingredient.RuleFor(i => i.Quantity)
                     .NotEmpty().WithMessage("Ingredient quantity is required.");
             });
-
-            // Validate dietary preferences
-            RuleForEach(recipe => recipe.DietaryPreferences)
-                .NotEmpty().WithMessage("Dietary preference cannot be empty.");
         }
     }
 }
