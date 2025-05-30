@@ -5,7 +5,8 @@
         ICreateRepository<T>,
         IReadRepository<T>,
         IUpdateRepository<T>,
-        IDeleteRepository<T>
+        IDeleteRepository<T>,
+        IExistsRepository<T>
         where T : class
     { }
 }

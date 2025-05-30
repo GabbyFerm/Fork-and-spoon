@@ -11,19 +11,26 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
-// Controllers 
+// Controllers & API Docs
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
-// Add Swagger/OpenAPI
 builder.Services.AddSwaggerDocumentation();
 
-// JWT Generator
+// JWT Generator & Auth
 builder.Services.AddScoped<JWTGenerator>();
-
-// Authentication
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAuthorization();
+
+// CORS (for frontend connection)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 // Build and run
 var app = builder.Build();
@@ -36,12 +43,14 @@ using (var scope = app.Services.CreateScope())
     await seeder.SeedAsync();
 }
 
-
+// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("FrontendPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();

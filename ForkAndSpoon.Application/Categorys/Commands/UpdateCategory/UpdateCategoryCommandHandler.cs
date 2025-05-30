@@ -30,10 +30,23 @@ namespace ForkAndSpoon.Application.Categorys.Commands.UpdateCategory
                 var category = categoryResult.Data;
 
                 // Only allow admin to rename 'Uncategorized'
-                if (category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase) &&
-                    request.Role != "Admin")
+                if (category.Name.Equals("Uncategorized", StringComparison.OrdinalIgnoreCase))
                 {
-                    return OperationResult<CategoryDto>.Failure("Only admins can update the 'Uncategorized' category.");
+                    return OperationResult<CategoryDto>.Failure("Default category cannot be updated.");
+                }
+
+                // Check if the new name is different from current
+                if (!category.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    var normalizedNewName = request.Name.Trim().ToLower();
+
+                    // Check for duplicate name in DB
+                    bool nameExists = await _categoryRepository.ExistsAsync(
+                        category => category.Name.ToLower() == normalizedNewName && category.CategoryID != request.CategoryID
+                    );
+
+                    if (nameExists)
+                        return OperationResult<CategoryDto>.Failure("A category with this name already exists.");
                 }
 
                 // Apply the name update

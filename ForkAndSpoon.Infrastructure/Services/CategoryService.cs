@@ -18,13 +18,13 @@ namespace ForkAndSpoon.Infrastructure.Services
             // Check if provided categoryId exists in the database
             if (categoryId != null)
             {
-                bool exists = await _context.Categories.AnyAsync(c => c.CategoryID == categoryId);
+                bool exists = await _context.Categories.AnyAsync(category => category.CategoryID == categoryId);
                 if (exists) return categoryId.Value;
             }
 
             // If not found, use fallback: CategoryID = 1 ("Uncategorized")
             const int fallbackCategoryId = 1;
-            bool fallbackExists = await _context.Categories.AnyAsync(c => c.CategoryID == fallbackCategoryId);
+            bool fallbackExists = await _context.Categories.AnyAsync(category => category.CategoryID == fallbackCategoryId);
 
             // If fallback doesn't exist, throw a clear error
             if (!fallbackExists)

@@ -8,13 +8,11 @@ namespace ForkAndSpoon.Application.Categorys.Commands.UpdateCategory
     {
         public int CategoryID { get; }
         public string Name { get; }
-        public string Role { get; }
 
-        public UpdateCategoryCommand(int categoryId, string name, string role)
+        public UpdateCategoryCommand(int categoryId, string name)
         {
             CategoryID = categoryId;
             Name = name;
-            Role = role;
         }
     }
 }

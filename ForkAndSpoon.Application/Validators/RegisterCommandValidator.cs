@@ -3,19 +3,23 @@ using ForkAndSpoon.Application.Authorize.DTOs;
 
 namespace ForkAndSpoon.Application.Validators
 {
-    public class UserRegisterDtoValidator : AbstractValidator<UserRegisterDto>
+    public class RegisterCommandValidator : AbstractValidator<UserRegisterDto>
     {
-        public UserRegisterDtoValidator()
+        public RegisterCommandValidator()
         {
             // Username must be provided and within valid length
             RuleFor(user => user.UserName)
                 .NotEmpty().WithMessage("Username is required.")
-                .Length(3, 50).WithMessage("Username must be between 3 and 50 characters.");
+                .Length(3, 50).WithMessage("Username must be between 3 and 50 characters.")
+                .Must(name => name.ToLower() != "string").WithMessage("Invalid default value for username.");
+
 
             // Email must be valid and not empty
             RuleFor(user => user.Email)
                 .NotEmpty().WithMessage("Email is required.")
-                .EmailAddress().WithMessage("A valid email address is required.");
+                .EmailAddress().WithMessage("A valid email address is required.")
+                .Must(email => email.ToLower() != "string").WithMessage("Invalid default value for email.");
+
 
             // Password must be strong and meet requirements
             RuleFor(user => user.Password)
@@ -24,7 +28,9 @@ namespace ForkAndSpoon.Application.Validators
                 .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
                 .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter.")
                 .Matches(@"\d").WithMessage("Password must contain at least one number.")
-                .Matches(@"[\!\@\#\$\%\^\&\*\(\)\-\+]").WithMessage("Password must contain at least one special character.");
+                .Matches(@"[\!\@\#\$\%\^\&\*\(\)\-\+]").WithMessage("Password must contain at least one special character.")
+                .Must(password => password.ToLower() != "string").WithMessage("Invalid default value for password.");
+
         }
     }
 }

@@ -44,7 +44,7 @@ namespace ForkAndSpoon.API.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         [HttpPost("create")]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryInputDto newCategory)
         {
@@ -56,13 +56,11 @@ namespace ForkAndSpoon.API.Controllers
             return CreatedAtAction(nameof(GetCategoryById), new { id = result.Data!.CategoryID }, result);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateCategory(int id, [FromBody] CategoryInputDto updateDto)
         {
-            var role = ClaimsHelper.GetUserRoleFromClaims(User);
-
-            var result = await _mediator.Send(new UpdateCategoryCommand(id, updateDto.Name, role));
+            var result = await _mediator.Send(new UpdateCategoryCommand(id, updateDto.Name));
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -74,9 +72,7 @@ namespace ForkAndSpoon.API.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            var role = ClaimsHelper.GetUserRoleFromClaims(User);
-
-            var result = await _mediator.Send(new DeleteCategoryCommand(id, role));
+            var result = await _mediator.Send(new DeleteCategoryCommand(id));
 
             if (!result.IsSuccess)
                 return BadRequest(result);
