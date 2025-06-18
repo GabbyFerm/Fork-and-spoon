@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Recipes.DTOs;
 
-namespace ForkAndSpoon.Application.Recipes.Validators
+namespace ForkAndSpoon.Application.Validators.Recipes
 {
     public class RecipeCreateDtoValidator : AbstractValidator<RecipeCreateDto>
     {

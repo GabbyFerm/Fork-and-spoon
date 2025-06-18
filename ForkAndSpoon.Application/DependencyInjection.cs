@@ -2,7 +2,7 @@
 using ForkAndSpoon.Application.Behaviors;
 using ForkAndSpoon.Application.Interfaces.Services;
 using ForkAndSpoon.Application.Services;
-using ForkAndSpoon.Application.Validators;
+using ForkAndSpoon.Application.Validators.Autorize;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 

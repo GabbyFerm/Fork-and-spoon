@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Recipes.Commands.UpdateRecipe;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Recipes
 {
     public class UpdateRecipeCommandValidator : AbstractValidator<UpdateRecipeCommand>
     {

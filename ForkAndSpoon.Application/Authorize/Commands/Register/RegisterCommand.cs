@@ -3,7 +3,7 @@ using MediatR;
 
 namespace ForkAndSpoon.Application.Authorize.Commands.Register
 {
-    public class RegisterCommand : IRequest<OperationResult<string>>
+    public class RegisterCommand : IRequest<OperationResult<User>>
     {
         public string UserName { get; set; }
         public string Email { get; set; }

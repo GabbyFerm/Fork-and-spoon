@@ -1,8 +1,8 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Recipes.Commands.CreateRecipe;
-using ForkAndSpoon.Application.Recipes.Validators;
+using ForkAndSpoon.Application.Validators.Recipes;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Categories
 {
     public class CreateRecipeCommandValidator : AbstractValidator<CreateRecipeCommand>
     {

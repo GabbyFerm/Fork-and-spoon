@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi.Models;
 
-namespace ForkAndSpoon.Infrastructure.Extensions
+namespace ForkAndSpoon.API.Helpers
 {
-    public static class SwaggerServiceExtensions
+    public static class SwaggerSetup
     {
         // Extension method to configure Swagger and JWT support
         public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)

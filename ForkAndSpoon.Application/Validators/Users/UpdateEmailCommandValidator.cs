@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Users.Commands.UpdateEmail;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Users
 {
     public class UpdateEmailCommandValidator : AbstractValidator<UpdateEmailCommand>
     {

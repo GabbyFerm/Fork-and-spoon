@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Authorize.DTOs;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Autorize
 {
     public class RegisterCommandValidator : AbstractValidator<UserRegisterDto>
     {

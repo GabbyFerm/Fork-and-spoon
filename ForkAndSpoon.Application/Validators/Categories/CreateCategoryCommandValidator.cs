@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Categorys.Commands.CreateCategory;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Categories
 {
     public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCommand>
     {

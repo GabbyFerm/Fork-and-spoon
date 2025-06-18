@@ -8,7 +8,7 @@ using System.Text;
 
 namespace ForkAndSpoon.Infrastructure.Helpers
 {
-    public class JWTGenerator : IJwtGenerator
+    public class JWTGenerator
     {
         private readonly IConfiguration _configuration;
 
