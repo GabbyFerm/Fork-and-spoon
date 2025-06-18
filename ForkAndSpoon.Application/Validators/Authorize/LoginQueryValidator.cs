@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Authorize.Queries;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Autorize
 {
     public class LoginQueryValidator : AbstractValidator<LoginQuery>
     {

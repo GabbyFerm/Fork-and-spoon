@@ -1,21 +1,22 @@
-﻿using ForkAndSpoon.Application.Interfaces;
+﻿using AutoMapper;
+using ForkAndSpoon.Application.Interfaces;
 using ForkAndSpoon.Domain.Models;
 using MediatR;
 
 namespace ForkAndSpoon.Application.Authorize.Commands.Register
 {
-    public class RegisterCommandHandler : IRequestHandler<RegisterCommand, OperationResult<string>>
+    public class RegisterCommandHandler : IRequestHandler<RegisterCommand, OperationResult<User>>
     {
         private readonly IAuthRepository _authRepository;
-        private readonly IJwtGenerator _jwtGenerator;
+        private readonly IMapper _mapper;
 
-        public RegisterCommandHandler(IAuthRepository authRepository, IJwtGenerator jwtGenerator)
+        public RegisterCommandHandler(IAuthRepository authRepository, IMapper mapper)
         {
             _authRepository = authRepository;
-            _jwtGenerator = jwtGenerator;
+            _mapper = mapper;
         }
 
-        public async Task<OperationResult<string>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+        public async Task<OperationResult<User>> Handle(RegisterCommand request, CancellationToken cancellationToken)
         {
             try 
             {
@@ -23,34 +24,24 @@ namespace ForkAndSpoon.Application.Authorize.Commands.Register
                 var emailExists = await _authRepository.EmailExistsAsync(request.Email);
 
                 if (emailExists)
-                    return OperationResult<string>.Failure("Email is already registered.");
+                    return OperationResult<User>.Failure("Email is already registered.");
 
-                // Hash the user's password before storing it
-                var hashedPassword = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                var user = _mapper.Map<User>(request);
 
-                // Create a new user entity
-                var user = new User
-                {
-                    UserName = request.UserName,
-                    Email = request.Email,
-                    Password = hashedPassword,
-                    Role = "User" // Default role
-                };
+                // Hash password manually
+                user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
                 // Save the user to the database
                 await _authRepository.CreateUserAsync(user);
                 await _authRepository.SaveChangesAsync();
 
-                // Generate a JWT token for the user
-                var token = _jwtGenerator.GenerateToken(user);
-
                 // Return the token wrapped in a success result
-                return OperationResult<string>.Success(token);
+                return OperationResult<User>.Success(user);
             }
             catch (Exception ex)
             {
                 // Handle unexpected errors
-                return OperationResult<string>.Failure($"Error during registration: {ex.Message}");
+                return OperationResult<User>.Failure($"Error during registration: {ex.Message}");
             }
         }
     }

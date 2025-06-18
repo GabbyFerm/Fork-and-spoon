@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using ForkAndSpoon.Application.Users.Commands.UpdateUserName;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Users
 {
     public class UpdateUserNameCommandValidator : AbstractValidator<UpdateUserNameCommand>
     {

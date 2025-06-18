@@ -5,6 +5,9 @@ using ForkAndSpoon.Application.Authorize.Commands.Register;
 using ForkAndSpoon.Application.Authorize.Commands.ResetPassword;
 using ForkAndSpoon.Application.Authorize.Queries;
 using ForkAndSpoon.Application.Authorize.DTOs;
+using ForkAndSpoon.Domain.Models;
+using ForkAndSpoon.Infrastructure.Helpers;
+using AutoMapper;
 
 namespace ForkAndSpoon.API.Controllers
 {
@@ -13,10 +16,14 @@ namespace ForkAndSpoon.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly JWTGenerator _jwtGenerator;
+        private readonly IMapper _mapper;
 
-        public AuthController(IMediator mediator)
+        public AuthController(IMediator mediator, JWTGenerator jwtGenerator, IMapper mapper)
         {
             _mediator = mediator;
+            _jwtGenerator = jwtGenerator;
+            _mapper = mapper;
         }
 
         [AllowAnonymous]
@@ -26,10 +33,19 @@ namespace ForkAndSpoon.API.Controllers
             var command = new RegisterCommand(registerDto.UserName, registerDto.Email, registerDto.Password);
             var result = await _mediator.Send(command);
 
-            if (!result.IsSuccess)
+            if (!result.IsSuccess || result.Data is null)
                 return BadRequest(result);
 
-            return Ok(result);
+            // Generate token
+            var token = _jwtGenerator.GenerateToken(result.Data);
+
+            var response = new AuthResponseDto
+            {
+                Token = token,
+                User = _mapper.Map<UserDtoResponse>(result.Data)
+            };
+
+            return Ok(OperationResult<AuthResponseDto>.Success(response));
         }
 
         [AllowAnonymous]
@@ -39,10 +55,21 @@ namespace ForkAndSpoon.API.Controllers
             var query = new LoginQuery(loginDto.UserName, loginDto.Password);
             var result = await _mediator.Send(query);
 
-            if (!result.IsSuccess)
+            if (!result.IsSuccess || result.Data is null)
                 return Unauthorized(result);
 
-            return Ok(result);
+            // Generate token
+            var token = _jwtGenerator.GenerateToken(result.Data);
+
+            var userDto = _mapper.Map<UserDtoResponse>(result.Data);
+
+            var response = new AuthResponseDto
+            {
+                Token = token,
+                User = userDto
+            };
+
+            return Ok(OperationResult<AuthResponseDto>.Success(response));
         }
 
         [AllowAnonymous]

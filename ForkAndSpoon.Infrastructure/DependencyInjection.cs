@@ -5,7 +5,6 @@ using ForkAndSpoon.Application.Interfaces.Services;
 using ForkAndSpoon.Application.Services;
 using ForkAndSpoon.Domain.Models;
 using ForkAndSpoon.Infrastructure.Database;
-using ForkAndSpoon.Infrastructure.Helpers;
 using ForkAndSpoon.Infrastructure.Repositories;
 using ForkAndSpoon.Infrastructure.Repositories.Generic;
 using ForkAndSpoon.Infrastructure.Services;
@@ -38,9 +37,6 @@ namespace ForkAndSpoon.Infrastructure
 
             // External API
             services.AddHttpClient<ITriviaService, TriviaService>();
-
-            // JWT Generator
-            services.AddScoped<IJwtGenerator, JWTGenerator>();
 
             return services;
         }

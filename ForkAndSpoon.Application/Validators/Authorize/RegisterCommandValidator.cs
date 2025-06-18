@@ -1,28 +1,28 @@
 ﻿using FluentValidation;
-using ForkAndSpoon.Application.Authorize.DTOs;
+using ForkAndSpoon.Application.Authorize.Commands.Register;
 
-namespace ForkAndSpoon.Application.Validators
+namespace ForkAndSpoon.Application.Validators.Autorize
 {
-    public class RegisterCommandValidator : AbstractValidator<UserRegisterDto>
+    public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
     {
         public RegisterCommandValidator()
         {
             // Username must be provided and within valid length
-            RuleFor(user => user.UserName)
+            RuleFor(command => command.UserName)
                 .NotEmpty().WithMessage("Username is required.")
                 .Length(3, 50).WithMessage("Username must be between 3 and 50 characters.")
-                .Must(name => name.ToLower() != "string").WithMessage("Invalid default value for username.");
+                .Must(command => command.ToLower() != "string").WithMessage("Invalid default value for username.");
 
 
             // Email must be valid and not empty
-            RuleFor(user => user.Email)
+            RuleFor(command => command.Email)
                 .NotEmpty().WithMessage("Email is required.")
                 .EmailAddress().WithMessage("A valid email address is required.")
-                .Must(email => email.ToLower() != "string").WithMessage("Invalid default value for email.");
+                .Must(command => command.ToLower() != "string").WithMessage("Invalid default value for email.");
 
 
             // Password must be strong and meet requirements
-            RuleFor(user => user.Password)
+            RuleFor(command => command.Password)
                 .NotEmpty().WithMessage("Password is required.")
                 .MinimumLength(8).WithMessage("Password must be at least 8 characters long.")
                 .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.")

@@ -1,8 +1,9 @@
+using ForkAndSpoon.API.Middleware;
 using ForkAndSpoon.Application;
 using ForkAndSpoon.Infrastructure;
 using ForkAndSpoon.Infrastructure.Database;
 using ForkAndSpoon.Infrastructure.Database.Seeders;
-using ForkAndSpoon.Infrastructure.Extensions;
+using ForkAndSpoon.API.Helpers;
 using ForkAndSpoon.Infrastructure.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseCors("FrontendPolicy");
 

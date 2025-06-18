@@ -4,18 +4,16 @@ using MediatR;
 
 namespace ForkAndSpoon.Application.Authorize.Queries
 {
-    public class LoginQueryHandler : IRequestHandler<LoginQuery, OperationResult<string>>
+    public class LoginQueryHandler : IRequestHandler<LoginQuery, OperationResult<User>>
     {
         private readonly IAuthRepository _authRepository;
-        private readonly IJwtGenerator _jwtGenerator;
 
-        public LoginQueryHandler(IAuthRepository authRepository, IJwtGenerator jwtGenerator)
+        public LoginQueryHandler(IAuthRepository authRepository)
         {
             _authRepository = authRepository;
-            _jwtGenerator = jwtGenerator;
         }
 
-        public async Task<OperationResult<string>> Handle(LoginQuery request, CancellationToken cancellationToken)
+        public async Task<OperationResult<User>> Handle(LoginQuery request, CancellationToken cancellationToken)
         {
             try 
             {
@@ -24,18 +22,14 @@ namespace ForkAndSpoon.Application.Authorize.Queries
 
                 // Validate password
                 if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password))
-                    return OperationResult<string>.Failure("Invalid credentials.");
+                    return OperationResult<User>.Failure("Invalid credentials.");
 
-                // Generate a token and return it
-                var token = _jwtGenerator.GenerateToken(user);
-
-                // Return the token wrapped in a success result
-                return OperationResult<string>.Success(token);
+                return OperationResult<User>.Success(user);
             }
             catch (Exception ex)
             {
                 // Handle unexpected errors
-                return OperationResult<string>.Failure($"Error during login: {ex.Message}");
+                return OperationResult<User>.Failure($"Error during login: {ex.Message}");
             }
         }
     }

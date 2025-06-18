@@ -3,7 +3,7 @@ using MediatR;
 
 namespace ForkAndSpoon.Application.Authorize.Queries
 {
-    public class LoginQuery : IRequest<OperationResult<string>>
+    public class LoginQuery : IRequest<OperationResult<User>>
     {
         public string UserName { get; set; }
         public string Password { get; set; }
